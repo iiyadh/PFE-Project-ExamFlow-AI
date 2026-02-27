@@ -1,13 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Button, Menu } from 'antd';
 import {
-    ShoppingCart,
-    BarChart3,
     LogOut,
     Clock,
-    Users,
     UsersRound,
-    Settings,
     Bell,
 } from 'lucide-react';
 import { SettingOutlined } from '@ant-design/icons';
@@ -50,38 +46,6 @@ const AdminSideBar = ({setOpen}) => {
             label: 'Manage Users',
             link: '/dashboard/users',
         },
-        {
-            key: '2',
-            icon: <ShoppingCart className="w-5 h-5" />,
-            label: 'Manage Medicine',
-            link: '/dashboard/medicine',
-        },
-        {
-            key: '3',
-            icon: <Clock className="w-5 h-5" />,
-            label: 'Alarm Management',
-            link: '/dashboard/reminders',
-        },
-        {
-            key: '4',
-            icon: <BarChart3 className="w-5 h-5" />,
-            label: 'Export History',
-            link: '/dashboard/history',
-        },
-        ...(role === 'admin' ? [
-            {
-                key: '5',
-                icon: <Users className="w-5 h-5" />,
-                label: 'User Management',
-                link: '/dashboard/users',
-            },
-            {
-                key: '6',
-                icon: <Settings className="w-5 h-5" />,
-                label: 'Settings',
-                link: '/dashboard/settings',
-            }
-        ] : []),
     ];
 
     const handleLogout = async () => {

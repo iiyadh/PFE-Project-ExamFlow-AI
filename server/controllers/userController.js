@@ -66,10 +66,12 @@ const linkWithGoogle = async (req, res) =>{
         });
         const { sub } = googleRes.data;
         let user = await User.findById(uid);
-
-        if(!user){
-            return res.status(404).json({ message: 'User not found' });
+        let existingUser = await User.findOne({ googleId: sub });
+        
+        if(existingUser && existingUser.id !== uid){
+            return res.status(400).json({ message: 'Google account already linked to another user' });
         }
+        
         if(user.googleId && user.googleId !== sub){
             return res.status(400).json({ message: 'Google account already linked to another user' });
         }

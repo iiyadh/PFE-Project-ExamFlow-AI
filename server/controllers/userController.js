@@ -200,7 +200,6 @@ const editProfile = async (req,res) =>{
         await user.save();
         res.json({ message: 'Profile updated successfully' });
     }catch(err){
-        console.log(err);
         res.status(500).json({ message: 'Server error' });
     }
 };

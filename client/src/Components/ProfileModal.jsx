@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Modal, Upload, Input, Button, Progress, message, Form, notification } from "antd";
 import ImgCrop from "antd-img-crop";
 import {
@@ -14,6 +14,7 @@ import { ShieldCheck, Lock, Eye, EyeOff, Info } from "lucide-react";
 import { useUserStore } from "../store/userStore.js";
 import { useGoogleLogin } from '@react-oauth/google';
 import api from '../lib/api.js';
+import { uploadToCloudinary } from "../lib/cloudinary.js";
 
 
 const computeCompletion = (user) => {
@@ -503,7 +504,10 @@ const ProfileModal = ({ open, setOpen, user: initialUser = {} }) => {
       return url;
     } catch (error) {
       console.error('Upload error:', error);
-      message.error('Image upload failed!');
+      notification.error({
+        message: 'Upload Failed',
+        description: 'An error occurred while uploading the image. Please try again.',
+      });
       throw error;
     }
   };
@@ -548,8 +552,9 @@ const ProfileModal = ({ open, setOpen, user: initialUser = {} }) => {
         username: user.username,
         numTel: user.numTel,
         address: user.address,
-        pfpUrl: finalUrl || user.pfpUrl,
+        pfpUrl: finalUrl.secure_url || user.pfpUrl,
       });
+      setImageUrl(finalUrl.secure_url || user.pfpUrl);
       await fetchUserData();
       notification.success({
         message: 'Profile Updated',
@@ -590,6 +595,29 @@ const ProfileModal = ({ open, setOpen, user: initialUser = {} }) => {
       });
     },
   });
+
+  const dummyRequest = ({ file, onSuccess }) => {
+    setTimeout(() => {
+      onSuccess("ok");
+    }, 0);
+  };
+
+  const beforeUpload = (file) => {
+    // Check if it's an image
+    const isImage = file.type.startsWith('image/');
+    if (!isImage) {
+      message.error('You can only upload image files!');
+      return Upload.LIST_IGNORE;
+    }
+    // Check file size (10MB limit)
+    const isLt10M = file.size / 1024 / 1024 < 10;
+    if (!isLt10M) {
+      message.error('Image must be smaller than 10MB!');
+      return Upload.LIST_IGNORE;
+    }
+
+    return true;
+  };
 
   return (
     <>
@@ -637,8 +665,23 @@ const ProfileModal = ({ open, setOpen, user: initialUser = {} }) => {
                     <UserOutlined style={{ fontSize: 26, color: "var(--color-text-muted)" }} />
                   )}
                 </div>
-                <ImgCrop rotationSlider>
-                  <Upload showUploadList={false} beforeUpload={() => false} onChange={handleImageChange} accept="image/*">
+                <ImgCrop
+                  showGrid
+                  rotationSlider
+                  aspectSlider
+                  showReset
+                  quality={1}
+                  aspect={1}
+                  minZoom={0.1}
+                  maxZoom={3}
+                  cropShape="round">
+                  <Upload
+                    showUploadList={false}
+                    onChange={handleImageChange}
+                    accept="image/*"
+                    customRequest={dummyRequest}
+                    beforeUpload={beforeUpload}
+                    maxCount={1}>
                     <button
                       className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center"
                       style={{ background: "var(--color-primary)", border: "2px solid var(--color-surface)", color: "#fff", cursor: "pointer" }}

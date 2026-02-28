@@ -19,6 +19,8 @@ import StudentPage from './Pages/StudentPage.jsx';
 import TeacherPage from './Pages/TeacherPage.jsx';
 import AdminUserList from './Components/AdminUserList.jsx';
 import NotFoundPage from './Pages/NotFoundPage.jsx';
+import CoursesComp from './Components/CoursesComp.jsx';
+import ClassComp from './Components/ClassComp.jsx';
 
 
 const router = createBrowserRouter([
@@ -35,7 +37,13 @@ const router = createBrowserRouter([
         {path: 'users', element: <AdminUserList />},
       ]},
       { path: '/student', element: <RequireAuth><RequireRole allowedRoles={['user', 'admin']}><StudentPage /></RequireRole></RequireAuth> },
-      { path: '/teacher', element: <RequireAuth><RequireRole allowedRoles={['user', 'admin']}><TeacherPage /></RequireRole></RequireAuth> },
+      { path: '/teacher', element: <RequireAuth><RequireRole allowedRoles={['user', 'admin']}><TeacherPage /></RequireRole></RequireAuth>,
+        children:[
+          { index: true, element: <Navigate to="/teacher/classes" replace />},
+          { path: 'classes', element: <ClassComp />},
+          { path: 'courses/:cid', element: <CoursesComp />},
+        ]
+       },
       { path: '*', element: <NotFoundPage /> },
     ],
   },

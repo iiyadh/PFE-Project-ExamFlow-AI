@@ -835,3 +835,59 @@
 .ant-modal-title{
   color: var(--color-text) !important;
 }
+.ant-progress-indicator{
+  color: var(--color-text-muted) !important;
+}
+
+
+
+/* ===========================
+  GLOBAL SCROLLBAR
+  =========================== */
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
+}
+
+/* Chromium / WebKit */
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 999px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: linear-gradient(
+   180deg,
+   color-mix(in srgb, var(--color-border) 80%, var(--color-surface-alt)),
+   var(--color-border)
+  );
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  border-radius: 999px;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(
+   180deg,
+   var(--color-primary-hover),
+   var(--color-primary)
+  );
+  border: 2px solid color-mix(in srgb, var(--color-primary) 20%, transparent);
+  background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-thumb:active {
+  background: var(--color-primary);
+}
+
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}

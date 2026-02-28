@@ -156,7 +156,7 @@ const ThemePanel = () => {
         Customize the appearance of the interface.
       </p>
 
-      <div className="grid grid-cols-3 gap-3 mb-8">
+      <div className="grid grid-cols-3 gap-3 mb-8" >
         {themes.map((theme) => (
           <ThemeCard
             key={theme.key}

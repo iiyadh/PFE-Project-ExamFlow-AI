@@ -244,6 +244,21 @@ const ClassComp = () => {
               </div>
             </div>
           ))}
+          {filteredClasses.length === 0 && (
+            <div className="col-span-full flex flex-col items-center justify-center py-20 text-center">
+              <div className="bg-surface rounded-2xl shadow-sm px-10 py-12 flex flex-col items-center max-w-md">
+                <div className="w-16 h-16 flex items-center justify-center rounded-full bg-primary/10 mb-6">
+                  <FolderOutlined className="text-3xl text-text-muted" />
+                </div>
+                <h3 className="text-xl font-semibold text-text mb-2">
+                  No Classes Found
+                </h3>
+                <p className="text-text-secondary text-sm mb-6">
+                  You don’t have any classes yet. Create one to get started.
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     <ClassModal

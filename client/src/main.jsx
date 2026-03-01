@@ -21,6 +21,7 @@ import AdminUserList from './Components/AdminUserList.jsx';
 import NotFoundPage from './Pages/NotFoundPage.jsx';
 import CoursesComp from './Components/CoursesComp.jsx';
 import ClassComp from './Components/ClassComp.jsx';
+import ModuleViewer from './Components/Moduleviewer.jsx';
 
 
 const router = createBrowserRouter([
@@ -42,6 +43,7 @@ const router = createBrowserRouter([
           { index: true, element: <Navigate to="/teacher/classes" replace />},
           { path: 'classes', element: <ClassComp />},
           { path: 'courses/:cid', element: <CoursesComp />},
+          { path: 'modules/:cid', element: <ModuleViewer />}
         ]
        },
       { path: '*', element: <NotFoundPage /> },

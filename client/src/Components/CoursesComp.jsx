@@ -1,7 +1,8 @@
-import { Card, Row, Col, Progress, Tag, message } from 'antd';
+import { Card, Row, Col, Progress, Tag, message , Input } from 'antd';
 import { RightOutlined } from '@ant-design/icons';
+import { BookOpen } from 'lucide-react';
 import { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams , useNavigate} from 'react-router-dom';
 
 const mockCourses = [
   {
@@ -11,7 +12,7 @@ const mockCourses = [
       'Master advanced React patterns including custom hooks, render props, compound components, and performance optimization techniques. Perfect for intermediate developers looking to level up.',
 
     progress: 100,
-    status: 'In Progress',
+    status: 'Completed',
     image: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
     level: 'Advanced',
   },
@@ -73,25 +74,27 @@ const mockCourses = [
 ];
 
 const CoursesComp = () => {
-  const [courseBookmarks, setCourseBookmarks] = useState(new Set());
+  const [CoursesData, setCoursesData] = useState(mockCourses);
+  const [filteredCourses, setFilteredCourses] = useState(CoursesData);
   const [messageApi, contextHolder] = message.useMessage();
+  const [searchTerm, setSearchTerm] = useState('');
   const { cid } = useParams();
+  const navigate = useNavigate();
 
-  const handleCopyCode = (code) => {
-    navigator.clipboard.writeText(code);
-    messageApi.success('Code copied to clipboard!');
-  };
 
-  const handleBookmark = (courseId) => {
-    const newBookmarks = new Set(courseBookmarks);
-    if (newBookmarks.has(courseId)) {
-      newBookmarks.delete(courseId);
-      messageApi.info('Removed from bookmarks');
-    } else {
-      newBookmarks.add(courseId);
-      messageApi.success('Added to bookmarks');
-    }
-    setCourseBookmarks(newBookmarks);
+
+  const handleSearch = (e) => {
+      const term = e.target.value;
+      setSearchTerm(term);
+      if (term.trim() === '') {
+          setFilteredCourses(CoursesData);
+      }
+      else {
+          const filtered = CoursesData.filter(
+              course => course.title.toLowerCase().includes(term.toLowerCase())|| course.description.toLowerCase().includes(term.toLowerCase())
+          );
+          setFilteredCourses(filtered);
+      }
   };
 
   const getLevelColor = (level) => {
@@ -109,21 +112,23 @@ const CoursesComp = () => {
       <main className="min-h-screen bg-bg py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
-          <div className="mb-12">
-            <div className="flex items-baseline gap-2 mb-2">
-              <span className="text-lg text-text-muted">Hi</span>
-              <h1 className="text-5xl font-bold text-primary m-0">
-                Alex
-              </h1>
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
+                <div className="w-full md:w-auto">
+                    <h1 className="w-75 text-2xl sm:text-3xl font-bold text-text mb-2">Courses</h1>
+                    <p className="text-text-secondary">Explore courses</p>
+                </div>
+                <Input
+                    placeholder="Search courses..."
+                    allowClear
+                    value={searchTerm}
+                    onChange={handleSearch}
+                    className="w-[50%] md:w-75 lg:w-100 xl:w-125 px-5! py-2.5!"
+                />
             </div>
-            <p className="text-lg text-text-secondary m-0">
-              Welcome back! Continue your learning journey.
-            </p>
-          </div>
 
           {/* Course Grid */}
           <Row gutter={[24, 24]}>
-            {mockCourses.map((course) => (
+            {filteredCourses.map((course) => (
               <Col key={course.id} xs={24} sm={24} md={12} lg={8}>
                 <Card
                   hoverable
@@ -136,6 +141,7 @@ const CoursesComp = () => {
                     >
                     </div>
                   }
+                  onClick={()=>navigate('/teacher/modules/' + course.id)}
                 >
                   {/* Title */}
                   <h3 className="text-lg font-semibold mb-3 text-text">
@@ -167,7 +173,9 @@ const CoursesComp = () => {
                         className="text-primary text-sm font-semibold flex items-center gap-1 no-underline hover:text-primary-hover transition-colors"
                       >
                         {course.progress <= 0 ? "Start Cours": course.progress >= 100 ?   "Finished" : "Continue"}
-                        <RightOutlined className="text-xs" />
+                        {
+                          course.progress <= 0 ? <RightOutlined /> : course.progress >= 100 ? null : <RightOutlined />
+                        }
                       </a>
                     </div>
 
@@ -175,7 +183,7 @@ const CoursesComp = () => {
                     <div className="mb-2">
                       <Progress
                         percent={course.progress}
-                        strokeColor="#5b21b6"
+                        strokeColor={course.progress == 100 ? "#3b82f6" : "#5b21b6"}
                         format={(percent) => `${percent}%`}
                         className='text-text!'
                         size="small"
@@ -185,6 +193,30 @@ const CoursesComp = () => {
                 </Card>
               </Col>
             ))}
+            {filteredCourses.length === 0 && (
+              <div className="w-full flex flex-col items-center justify-center py-24 text-center">
+                
+                <div className="w-20 h-20 flex items-center justify-center rounded-full bg-primary/10 mb-6">
+                  <BookOpen className="w-10 h-10 text-primary" strokeWidth={1.5} />
+                </div>
+
+                <h3 className="text-2xl font-semibold text-text-primary mb-2">
+                  No Courses Found
+                </h3>
+
+                <p className="text-text-secondary text-sm max-w-md mb-6">
+                  We couldn’t find any courses matching{" "}
+                  <span className="font-medium text-text-primary">
+                    "{searchTerm}"
+                  </span>.
+                </p>
+
+                <button className="px-6 py-2.5 bg-primary hover:bg-primary-hover text-white rounded-xl transition-all duration-200">
+                  Clear Search
+                </button>
+
+              </div>
+            )}
           </Row>
         </div>
       </main>

@@ -1,25 +1,109 @@
-import React, { useState } from 'react';
-import { Button, Modal } from 'antd';
+import { useEffect, useState } from 'react';
+import { Button, Modal , notification } from 'antd';
 import { UserOutlined, TeamOutlined, CloseOutlined } from '@ant-design/icons';
 import { GraduationCap, Users, Sparkles } from 'lucide-react';
 import PricingComponent from './PricingComponent';
+import api from '../lib/api';
+import { useNavigate } from 'react-router-dom';
+import { useAuthStore } from '../store/authStore';
+import { useUserStore } from '../store/userStore';
+
 
 const UserOrientationComp = () => {
   const [isPricingModalVisible, setIsPricingModalVisible] = useState(false);
+  const navigate = useNavigate();
+  const { logout } = useAuthStore();
+  const [loading, setLoading] = useState(false);
+  const { 
+    fetchUserData,
+    username,
+    email,
+    pfpUrl,
+    numTel,
+    address,
+    googleId,
+   } = useUserStore();
 
+  const getPlanType = (planName) => {
+    if (planName.toLowerCase().includes('basic')) return 'basic';
+    if (planName.toLowerCase().includes('pro')) return 'pro';
+    if (planName.toLowerCase().includes('institution')) return 'institution';
+    return 'basic';
+  };
+
+
+  useEffect(() => {
+    fetchUserData();
+  },[fetchUserData]);
+
+  const isCompleteProfile = username && email && pfpUrl && numTel && address && googleId;
+
+  const handleSelect = async (plan) => {
+    if (!isCompleteProfile) {
+      notification.warning({
+        message: 'Incomplete Profile',
+        description: 'Please complete your profile information before selecting a teacher plan.',
+      });
+      return;
+    }
+    setLoading(true);
+    try {
+      const planType = getPlanType(plan.name);
+      await api.put('/user/setrole', { role: 'teacher', plan: planType });
+      notification.success({
+        message: 'Successful Role Update',
+        description: 'Please Relogin to log as teacher.',
+      });
+      await logout();
+      navigate('/login');
+    } catch (err) {
+      console.error('Error setting role:', err);
+      notification.error({
+        message: 'Error',
+        description: 'Failed to set role. Please try again.',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+  
   const handleTeacherClick = () => {
     setIsPricingModalVisible(true);
   };
-
-  const handleStudentClick = () => {
-    // Handle student orientation logic here
-    console.log('Student orientation selected');
-    // You can add navigation or state change logic here
+  
+  const handleStudentClick = async () => {
+    if (!isCompleteProfile) {
+      notification.warning({
+        message: 'Incomplete Profile',
+        description: 'Please complete your profile information before selecting a teacher plan.',
+      });
+      return;
+    }
+    setLoading(true);
+    try{
+      await api.put('/user/setrole', { role: 'student' });
+      notification.success({
+        message: 'Successful Role Update',
+        description: 'Please Relogin to log as student.',
+      });
+      logout();
+      navigate('/login');
+    }catch(err){
+      console.error('Error setting role:', err);
+      notification.error({
+        message: 'Error',
+        description: 'Failed to set role. Please try again.',
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleCloseModal = () => {
     setIsPricingModalVisible(false);
   };
+
+
 
   return (
     <>
@@ -125,6 +209,7 @@ const UserOrientationComp = () => {
                     onClick={handleStudentClick}
                     className="w-full h-12 text-base font-medium border-2 border-accent text-accent hover:bg-accent hover:text-white transition-colors"
                     icon={<UserOutlined />}
+                    loading={loading}
                 >
                     Start Learning
                 </Button>
@@ -156,7 +241,7 @@ const UserOrientationComp = () => {
         closeIcon={<CloseOutlined className="text-text-secondary hover:text-text" />}
         style={{ top: 20 }}
       >
-        <PricingComponent />
+        <PricingComponent OnSelect={handleSelect} />
       </Modal>
     </>
   );

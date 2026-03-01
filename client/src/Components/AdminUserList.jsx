@@ -262,7 +262,7 @@ const AdminUserList = () => {
             key: 'actions',
             width: '16%',
             render: (_, record) => (
-                record.role == "user" ? (<Space size="small">
+                record.role != "admin" ? (<Space size="small">
                     <Tooltip title={record.status == 'suspended' ? "Unblock User" : "Block User"}>
                         <Button
                             type="text"

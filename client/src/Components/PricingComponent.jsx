@@ -18,7 +18,7 @@ import { useState } from 'react';
 import { useAuthStore } from '../store/authStore';
 import { Link } from 'react-router-dom';
 
-const PricingComponent = () => {
+const PricingComponent = ( {OnSelect} ) => {
     const [billingCycle, setBillingCycle] = useState('month'); // 'month', 'year', or '5year'
     const { isAuthenticated } = useAuthStore();
 
@@ -450,9 +450,9 @@ const PricingComponent = () => {
                                                         : `bg-linear-to-br ${colors.gradient} text-white`
                                                     }
                                                     shadow-lg ${plan.popular ? 'shadow-warning/20' : colors.shadow}
-                                                    hover:scale-105 transition-all duration-200
+                                                    ${plan.target !== 'admin'? 'hover:scale-105 transition-all duration-200' : 'hover:none cursor-not-allowed opacity-0'}
                                                 `}
-                                                onClick={handleCheckout}
+                                                onClick={() => OnSelect(plan)}
                                                 disabled={plan.target === 'admin'} // Disable checkout for Institution plan (contact sales)
                                             >
                                                 {plan.buttonText}

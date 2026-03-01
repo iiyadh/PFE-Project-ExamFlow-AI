@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight, Circle, CheckCircle2 } from "lucide-react";
-import { Tooltip, Progress, Badge, Divider } from "antd";
+import { Tooltip, Progress, Divider } from "antd";
 import { MenuOutlined, CloseOutlined, BookOutlined } from "@ant-design/icons";
 import ReactMarkdown from "react-markdown";
 import { useParams } from "react-router-dom";

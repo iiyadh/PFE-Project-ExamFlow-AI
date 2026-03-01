@@ -209,10 +209,10 @@ const editProfile = async (req,res) =>{
 };
 
 const setRoleUser = async (req,res) =>{
-    const { id } = req.params;
+    const uid = req.user.id;
     const { role , plan } = req.body;
     try{
-        const user = await User.findById(id);
+        const user = await User.findById(uid);
         if(!user){
             return res.status(404).json({ message: 'User not found' });
         }
@@ -233,6 +233,7 @@ const setRoleUser = async (req,res) =>{
         await user.save();
         res.json({ message: 'User role updated successfully' });
     }catch(err){
+        console.log(err);
         res.status(500).json({ message: 'Server error' });
     }
 }
@@ -247,5 +248,6 @@ module.exports = {
     sendOTPCode,
     verifyOTPCode,
     changePassword,
-    editProfile
+    editProfile,
+    setRoleUser
 };

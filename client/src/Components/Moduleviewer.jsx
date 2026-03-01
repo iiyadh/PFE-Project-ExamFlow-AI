@@ -219,24 +219,11 @@ const ModuleViewer = ({ modules = sampleModules }) => {
             return (
               <button
                 key={module.id}
-                onClick={() => goTo(index)}
                 className="w-full text-left mb-1 rounded-lg px-4 py-3 flex items-center gap-3 transition-all duration-200 group"
                 style={{
                   background: isActive ? "var(--color-primary)" : "transparent",
                   color: isActive ? "#fff" : isVisited ? "var(--color-text)" : "var(--color-text-muted)",
                   border: isActive ? "none" : `1px solid transparent`,
-                }}
-                onMouseEnter={(e) => {
-                  if (!isActive) {
-                    e.currentTarget.style.background = "var(--color-surface-alt)";
-                    e.currentTarget.style.borderColor = "var(--color-border)";
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!isActive) {
-                    e.currentTarget.style.background = "transparent";
-                    e.currentTarget.style.borderColor = "transparent";
-                  }
                 }}
               >
                 <span className="shrink-0">

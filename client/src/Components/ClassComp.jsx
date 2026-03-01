@@ -10,7 +10,6 @@ const classes = [
     id: '1',
     title: 'Développement Mobile',
     subtitle: 'abdelkader maatallah',
-    instructor: 'abdelkader maatallah',
     color: 'bg-emerald-500',
     avatar: 'https://i.pravatar.cc/150?img=1',
   },
@@ -18,7 +17,6 @@ const classes = [
     id: '2',
     title: 'Big Data',
     subtitle: 'abdelkader maatallah',
-    instructor: 'abdelkader maatallah',
     color: 'bg-emerald-500',
     avatar: 'https://i.pravatar.cc/150?img=2',
   },
@@ -26,7 +24,6 @@ const classes = [
     id: '3',
     title: 'Architecture orientée services',
     subtitle: 'abdelkader maatallah',
-    instructor: 'abdelkader maatallah',
     color: 'bg-blue-600',
     avatar: 'https://i.pravatar.cc/150?img=3',
   },
@@ -34,7 +31,6 @@ const classes = [
     id: '4',
     title: 'DSI 3 Promo 2025-2026',
     subtitle: 'Hathem Hafsi',
-    instructor: 'Hathem Hafsi',
     color: 'bg-teal-500',
     avatar: 'https://i.pravatar.cc/150?img=4',
   },
@@ -42,7 +38,6 @@ const classes = [
     id: '5',
     title: "TEST D'APPLICATION",
     subtitle: 'DSI 21-22-23',
-    instructor: 'Manel Ghakroun',
     color: 'bg-emerald-500',
     initial: 'M',
   },
@@ -50,7 +45,6 @@ const classes = [
     id: '6',
     title: 'Python avancé',
     subtitle: 'DSI21 - 2024/2025',
-    instructor: 'Wahid Hamdi',
     color: 'bg-slate-600',
     avatar: 'https://i.pravatar.cc/150?img=5',
   },
@@ -58,7 +52,6 @@ const classes = [
     id: '7',
     title: 'Atelier JEE',
     subtitle: 'DSI21 - 2024/2025',
-    instructor: 'Wahid Hamdi',
     color: 'bg-orange-500',
     avatar: 'https://i.pravatar.cc/150?img=6',
   },
@@ -66,7 +59,6 @@ const classes = [
     id: '8',
     title: 'Solutions Lab Club',
     subtitle: 'Problem solving & Competitive programming',
-    instructor: 'Oussama Benali',
     color: 'bg-purple-600',
     avatar: 'https://i.pravatar.cc/150?img=7',
   },
@@ -91,8 +83,7 @@ const ClassComp = () => {
         }
         else {
             const filtered = classesData.filter(clas =>
-                clas.title.toLowerCase().includes(term.toLowerCase()) || clas.subtitle.toLowerCase().includes(term.toLowerCase()) ||
-                clas.instructor.toLowerCase().includes(term.toLowerCase())
+                clas.title.toLowerCase().includes(term.toLowerCase()) || clas.subtitle.toLowerCase().includes(term.toLowerCase())
             );
             setFilteredClasses(filtered);
         }
@@ -104,7 +95,6 @@ const ClassComp = () => {
                 id: (classesData.length + 1).toString(),
                 title: data.title,
                 subtitle: data.subtitle,
-                instructor: data.instructor,
                 color: data.color || 'bg-emerald-500',
                 initial: data.title.charAt(0).toUpperCase(),
             };

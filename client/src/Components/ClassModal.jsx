@@ -27,7 +27,6 @@ const ClassModal = ({ mode, open, onClose, classData, onSubmit, onDelete }) => {
             form.setFieldsValue({
                 title: classData.title,
                 subtitle: classData.subtitle,
-                instructor: classData.instructor,
                 description: classData.description || '',
                 color: classData.color,
             });
@@ -184,19 +183,6 @@ const ClassModal = ({ mode, open, onClose, classData, onSubmit, onDelete }) => {
                             placeholder="e.g., DSI21 - 2024/2025"
                             size="large"
                             prefix={<InfoCircleOutlined className="text-text-muted mr-2" />}
-                            className="bg-surface! border-border! text-text! placeholder:text-text-muted! hover:border-primary! focus:border-primary!"
-                        />
-                    </Form.Item>
-
-                    <Form.Item
-                        name="instructor"
-                        label={<span className="text-text font-medium">Instructor</span>}
-                        rules={[{ required: true, message: 'Please enter instructor name' }]}
-                    >
-                        <Input 
-                            placeholder="e.g., Dr. John Smith"
-                            size="large"
-                            prefix={<UserOutlined className="text-text-muted mr-2" />}
                             className="bg-surface! border-border! text-text! placeholder:text-text-muted! hover:border-primary! focus:border-primary!"
                         />
                     </Form.Item>

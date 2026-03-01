@@ -1,4 +1,4 @@
-import { Modal, Input, Button, Tag, Tooltip, Spin, Empty } from 'antd';
+import { Modal, Input, Button, Tag, Tooltip, Spin, Empty , Upload } from 'antd';
 import {
   FileTextOutlined,
   FilePdfOutlined,
@@ -13,6 +13,7 @@ import {
   CheckCircleFilled,
   ClockCircleOutlined,
   SyncOutlined,
+  UploadOutlined,
 } from '@ant-design/icons';
 import { useState, useEffect } from 'react';
 
@@ -189,11 +190,7 @@ const DriveFilesModal = ({ open, onClose, classData }) => {
     }, 1200);
   };
 
-  const stats = {
-    total: files.length,
-    converted: files.filter((f) => f.status === 'converted').length,
-    pending: files.filter((f) => f.status === 'pending').length,
-  };
+
 
   return (
     <Modal
@@ -229,20 +226,25 @@ const DriveFilesModal = ({ open, onClose, classData }) => {
               </p>
             </div>
           </div>
-
-          {/* Stats pills - using theme variables with opacity */}
           <div className="flex gap-2">
-            <div className="bg-white/20 dark:bg-surface-alt! rounded-full px-3 py-1 text-text dark:text-text text-xs font-medium">
-              {stats.total} files
-            </div>
-            <div className="bg-success/30 dark:bg-success/20! rounded-full px-3 py-1 text-text dark:text-success text-xs font-medium">
-              {stats.converted} converted
-            </div>
-            {stats.pending > 0 && (
-              <div className="bg-white/10 dark:bg-warning/10! rounded-full px-3 py-1 text-text/90 dark:text-warning text-xs font-medium">
-                {stats.pending} pending
-              </div>
-            )}
+              <Button
+                icon={<GoogleOutlined />}
+                className='border-border text-text hover:text-primary hover:border-primary'
+              >
+                Import from Google Drive
+              </Button>
+              <Upload
+                name="file"
+                multiple
+                showUploadList={false}
+              >
+                <Button
+                  className="border-border text-text hover:text-primary hover:border-primary"
+                >
+                  <UploadOutlined className="text-lg" />
+                  Upload File
+                </Button>
+              </Upload>
           </div>
         </div>
       </div>

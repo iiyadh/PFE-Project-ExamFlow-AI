@@ -23,7 +23,7 @@ const NavBar = ({ role, setOpen ,setProfileOpen }) => {
     const navigate = useNavigate();
     const { darkMode } = useThemeStore();
     const { logout } = useAuthStore();
-    const { fetchUserData , username , pfpUrl , } = useUserStore();
+    const { fetchUserData , username , pfpUrl  } = useUserStore();
     
     useEffect(() => {
         fetchUserData();
@@ -76,8 +76,8 @@ const NavBar = ({ role, setOpen ,setProfileOpen }) => {
                 return {
                     icon: <User className="w-5 h-5" />,
                     label: 'User',
-                    bgColor: 'bg-border/10',
-                    textColor: 'text-text-muted',
+                    bgColor: 'bg-info/10',
+                    textColor: 'text-warning',
                 };
         }
     };

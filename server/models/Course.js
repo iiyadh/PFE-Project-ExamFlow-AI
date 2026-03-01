@@ -14,10 +14,11 @@ const courseSchema = new mongoose.Schema({
         ref: 'Teacher',
         required: true
     },
-    classes: [{
+    class:{
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Class'
-    }],
+        ref: 'Class',
+        required: true
+    },
     originalFileUrl: {
         type: String
     },
@@ -25,9 +26,12 @@ const courseSchema = new mongoose.Schema({
         type: String,
         enum: ['PDF', 'DOCX']
     },
-    markdownContent: {
-        type: String
-    },
+    markdownContent: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'MarkdownContent'
+        }
+    ],
     structuredContent: {
         type: Object
     },

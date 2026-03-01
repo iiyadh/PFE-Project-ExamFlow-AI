@@ -145,7 +145,13 @@ const ModuleViewer = ({ modules = sampleModules }) => {
     setVisited((prev) => new Set([...prev, index]));
   };
 
-  const handlePrevious = () => goTo(currentIndex > 0 ? currentIndex - 1 : modules.length - 1);
+  const handlePrevious = () => {
+    if (currentIndex === 0) {
+        return;
+    }
+    goTo(currentIndex > 0 ? currentIndex - 1 : modules.length - 1);
+
+};
   const handleNext = () => goTo(currentIndex < modules.length - 1 ? currentIndex + 1 : 0);
 
   useEffect(() => {
@@ -307,7 +313,7 @@ const ModuleViewer = ({ modules = sampleModules }) => {
 
           {/* Navigation Buttons */}
           <div className="flex items-center gap-2">
-              <button
+              {currentIndex!=0 &&<button
                 onClick={handlePrevious}
                 className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all"
                 style={{
@@ -328,7 +334,8 @@ const ModuleViewer = ({ modules = sampleModules }) => {
                 <ChevronLeft size={16} />
                 Previous
               </button>
-              <button
+              }
+              {currentIndex < modules.length - 1 && <button
                 onClick={handleNext}
                 className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all"
                 style={{
@@ -346,7 +353,7 @@ const ModuleViewer = ({ modules = sampleModules }) => {
               >
                 Next
                 <ChevronRight size={16} />
-              </button>
+              </button>}
           </div>
         </header>
 

@@ -1,4 +1,4 @@
-import { Avatar, Button, Input ,Dropdown, Tooltip} from 'antd';
+import { Avatar, Button, Input ,Dropdown, Tooltip, Descriptions} from 'antd';
 import { FolderOutlined, EllipsisOutlined, PlusOutlined ,EditOutlined  ,DeleteOutlined } from '@ant-design/icons';
 import { useState } from 'react';
 import ClassModal from './ClassModal';
@@ -11,6 +11,7 @@ const classes = [
     title: 'Développement Mobile',
     subtitle: 'abdelkader maatallah',
     color: 'bg-emerald-500',
+    description : 'Explore the world of mobile app development with our comprehensive course.',
     avatar: 'https://i.pravatar.cc/150?img=1',
   },
   {
@@ -18,6 +19,7 @@ const classes = [
     title: 'Big Data',
     subtitle: 'abdelkader maatallah',
     color: 'bg-emerald-500',
+    description : 'Explore the world of mobile app development with our comprehensive course.',
     avatar: 'https://i.pravatar.cc/150?img=2',
   },
   {
@@ -25,6 +27,7 @@ const classes = [
     title: 'Architecture orientée services',
     subtitle: 'abdelkader maatallah',
     color: 'bg-blue-600',
+    description : 'Explore the world of mobile app development with our comprehensive course.',
     avatar: 'https://i.pravatar.cc/150?img=3',
   },
   {
@@ -32,6 +35,7 @@ const classes = [
     title: 'DSI 3 Promo 2025-2026',
     subtitle: 'Hathem Hafsi',
     color: 'bg-teal-500',
+    description : 'Explore the world of mobile app development with our comprehensive course.',
     avatar: 'https://i.pravatar.cc/150?img=4',
   },
   {
@@ -39,6 +43,7 @@ const classes = [
     title: "TEST D'APPLICATION",
     subtitle: 'DSI 21-22-23',
     color: 'bg-emerald-500',
+    description : 'Explore the world of mobile app development with our comprehensive course.',
     initial: 'M',
   },
   {
@@ -46,6 +51,7 @@ const classes = [
     title: 'Python avancé',
     subtitle: 'DSI21 - 2024/2025',
     color: 'bg-slate-600',
+    description : 'Explore the world of mobile app development with our comprehensive course.',
     avatar: 'https://i.pravatar.cc/150?img=5',
   },
   {
@@ -53,6 +59,7 @@ const classes = [
     title: 'Atelier JEE',
     subtitle: 'DSI21 - 2024/2025',
     color: 'bg-orange-500',
+    description : 'Explore the world of mobile app development with our comprehensive course.',
     avatar: 'https://i.pravatar.cc/150?img=6',
   },
   {
@@ -60,6 +67,7 @@ const classes = [
     title: 'Solutions Lab Club',
     subtitle: 'Problem solving & Competitive programming',
     color: 'bg-purple-600',
+    description : 'Explore the world of mobile app development with our comprehensive course.',
     avatar: 'https://i.pravatar.cc/150?img=7',
   },
 ];
@@ -193,7 +201,18 @@ const ClassComp = () => {
               </div>
 
               {/* Card Body - Empty space */}
-              <div className="h-24 bg-surface"></div>
+              <div className="h-24 bg-surface">
+                {clas.description && (
+                    <p className="p-4 text-sm text-text-secondary line-clamp-3">
+                        {clas.description}
+                    </p>
+                )}
+                {!clas.description && (
+                    <div className="p-4 text-sm text-text-secondary italic">
+                        No description provided.
+                    </div>
+                )}
+              </div>
 
               {/* Card Footer */}
               <div className="border-t border-border p-4 flex items-center justify-center gap-6" onClick={(e) => e.stopPropagation()}>

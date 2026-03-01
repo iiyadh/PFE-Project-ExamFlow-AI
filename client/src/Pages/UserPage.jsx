@@ -6,13 +6,13 @@ import { Outlet } from "react-router-dom";
 
 
 
-const TeacherPage = () =>{
+const UserPage = () =>{
     const [open,setOpen] = useState(false);
     const [profileOpen,setProfileOpen] = useState(false);
     
     return (
         <div className="w-full min-h-screen flex bg-bg flex-col">
-            <NavBar role="TEACHER" setOpen={setOpen} setProfileOpen={setProfileOpen}/>
+            <NavBar role="USER" setOpen={setOpen} setProfileOpen={setProfileOpen}/>
             <SettingsModal open={open} setOpen={setOpen}  />
             <ProfileModal open={profileOpen} setOpen={setProfileOpen} />
             <Outlet />
@@ -20,4 +20,4 @@ const TeacherPage = () =>{
     )
 }
 
-export default TeacherPage;
+export default UserPage;

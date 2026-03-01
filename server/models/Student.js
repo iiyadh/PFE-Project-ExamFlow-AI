@@ -7,25 +7,10 @@ const studentSchema = new mongoose.Schema({
         required: true,
         unique: true
     },
-    class: {
+    classes: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Class'
-    },
-    enrolledCourses: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Course'
     }],
-    progress: [{
-        course: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'Course'
-        },
-        completedSections: [String],
-        completionPercentage: {
-            type: Number,
-            default: 0
-        }
-    }]
 }, { timestamps: true });
 
 

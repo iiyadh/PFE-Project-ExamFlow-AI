@@ -2,6 +2,8 @@ const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const axios = require('axios');
 const { sendEmail } = require('../libs/emailSender');
+const Teacher = require('../models/Teacher');
+const Student = require('../models/Student');
 
 
 
@@ -205,6 +207,35 @@ const editProfile = async (req,res) =>{
         res.status(500).json({ message: 'Server error' });
     }
 };
+
+const setRoleUser = async (req,res) =>{
+    const { id } = req.params;
+    const { role , plan } = req.body;
+    try{
+        const user = await User.findById(id);
+        if(!user){
+            return res.status(404).json({ message: 'User not found' });
+        }
+        user.role = role || user.role;
+        if(role === 'teacher' ){
+            const newTeacher = new Teacher({
+                user: user._id,
+                plan: plan || 'basic'
+            });
+            await newTeacher.save();
+        }
+        if(role === 'student' ){
+            const newStudent = new Student({
+                user: user._id,
+            });
+            await newStudent.save();
+        }
+        await user.save();
+        res.json({ message: 'User role updated successfully' });
+    }catch(err){
+        res.status(500).json({ message: 'Server error' });
+    }
+}
 
 
 module.exports = {

@@ -22,6 +22,8 @@ import NotFoundPage from './Pages/NotFoundPage.jsx';
 import CoursesComp from './Components/CoursesComp.jsx';
 import ClassComp from './Components/ClassComp.jsx';
 import ModuleViewer from './Components/Moduleviewer.jsx';
+import UserPage from './Pages/UserPage.jsx';
+import UserOrientationComp from './Components/UserOrientationComp.jsx';
 
 
 const router = createBrowserRouter([
@@ -37,15 +39,20 @@ const router = createBrowserRouter([
         {index: true, element: <Navigate to="/dashboard/users" replace />},
         {path: 'users', element: <AdminUserList />},
       ]},
-      { path: '/student', element: <RequireAuth><RequireRole allowedRoles={['user', 'admin']}><StudentPage /></RequireRole></RequireAuth> },
-      { path: '/teacher', element: <RequireAuth><RequireRole allowedRoles={['user', 'admin']}><TeacherPage /></RequireRole></RequireAuth>,
-        children:[
-          { index: true, element: <Navigate to="/teacher/classes" replace />},
-          { path: 'classes', element: <ClassComp />},
-          { path: 'courses/:cid', element: <CoursesComp />},
-          { path: 'modules/:cid', element: <ModuleViewer />}
-        ]
-       },
+      { path: '/student', element: <RequireAuth><RequireRole allowedRoles={['student', 'admin']}><StudentPage /></RequireRole></RequireAuth> },
+      { path: '/teacher', element: <RequireAuth><RequireRole allowedRoles={['teacher', 'admin']}><TeacherPage /></RequireRole></RequireAuth>,
+      children:[
+        { index: true, element: <Navigate to="/teacher/classes" replace />},
+        { path: 'classes', element: <ClassComp />},
+        { path: 'courses/:cid', element: <CoursesComp />},
+        { path: 'modules/:cid', element: <ModuleViewer />}
+      ]
+    },
+      { path: '/home' , element: <RequireAuth><RequireRole allowedRoles={['user' , 'admin']}><UserPage /></RequireRole></RequireAuth> ,
+      children:[
+        { index: true, element: <Navigate to="/home/orientation" replace />},
+        { path: 'orientation', element: <UserOrientationComp />}
+      ]},
       { path: '*', element: <NotFoundPage /> },
     ],
   },

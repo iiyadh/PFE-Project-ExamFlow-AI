@@ -80,6 +80,8 @@ const signWithGoogle = async (req, res) =>{
         if(!user){
             res.status(400).json({ message: 'User not signed with google' });
         }
+        user.lastLogin = Date.now();
+        await user.save();
         const jwtToken = generateToken(user);
         res.cookie('token', jwtToken, cookieOptions);
         res.json({ message: 'Login with Google successful' , role : user.role});

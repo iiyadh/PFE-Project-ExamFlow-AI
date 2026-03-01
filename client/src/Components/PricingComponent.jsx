@@ -15,10 +15,12 @@ import {
     Lock
 } from 'lucide-react';
 import { useState } from 'react';
+import { useAuthStore } from '../store/authStore';
 import { Link } from 'react-router-dom';
 
 const PricingComponent = () => {
     const [billingCycle, setBillingCycle] = useState('month'); // 'month', 'year', or '5year'
+    const { isAuthenticated } = useAuthStore();
 
     const plans = [
         {
@@ -201,6 +203,11 @@ const PricingComponent = () => {
         }
     };
 
+    const handleCheckout = () => {
+        // Implement checkout logic here (e.g., redirect to payment gateway)
+        alert('Checkout process initiated!');
+    };
+
     return (
         <section className="relative min-h-screen bg-bg py-16 overflow-hidden">
             {/* Background decorative elements */}
@@ -325,16 +332,6 @@ const PricingComponent = () => {
                                 key={index}
                                 className="relative group"
                             >
-                                {/* Popular Badge */}
-                                {/* {plan.popular && (
-                                    <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-20">
-                                        <div className="bg-linear-to-br from-warning to-orange-400 text-white px-4 py-1.5 rounded-full text-sm font-semibold flex items-center gap-1 shadow-lg shadow-warning/20">
-                                            <Star className="w-3 h-3 fill-current" />
-                                            Most Popular for Teachers
-                                        </div>
-                                    </div>
-                                )} */}
-
                                 {/* Card */}
                                 <div className={`flex flex-col
                                     relative h-full bg-surface/80 backdrop-blur-xl 
@@ -423,7 +420,7 @@ const PricingComponent = () => {
 
                                     {/* Card Footer */}
                                     <div className="p-8 pt-0 justify-end mt-auto">
-                                        <Link to={`/register?plan=${plan.name.toLowerCase().replace(' ', '-')}&billing=${billingCycle}`}>
+                                        {!isAuthenticated && <Link to={`/register?plan=${plan.name.toLowerCase().replace(' ', '-')}&billing=${billingCycle}`}>
                                             <Button
                                                 type="primary"
                                                 block
@@ -440,7 +437,27 @@ const PricingComponent = () => {
                                             >
                                                 {plan.buttonText}
                                             </Button>
-                                        </Link>
+                                        </Link>}
+                                        {isAuthenticated && (
+                                            <Button
+                                                type="primary"
+                                                block
+                                                size="large"
+                                                className={`
+                                                    h-12 text-base font-semibold rounded-xl border-0
+                                                    ${plan.popular
+                                                        ? 'bg-linear-to-br from-warning to-orange-400 hover:from-orange-400 hover:to-warning text-white'
+                                                        : `bg-linear-to-br ${colors.gradient} text-white`
+                                                    }
+                                                    shadow-lg ${plan.popular ? 'shadow-warning/20' : colors.shadow}
+                                                    hover:scale-105 transition-all duration-200
+                                                `}
+                                                onClick={handleCheckout}
+                                                disabled={plan.target === 'admin'} // Disable checkout for Institution plan (contact sales)
+                                            >
+                                                {plan.buttonText}
+                                            </Button>
+                                        )}
 
                                         {/* Free Trial */}
                                         <p className="text-xs text-text-muted text-center mt-4">

@@ -3,7 +3,7 @@ const { getUserProfile , fetchUsers ,toggleBlockUser , deleteUser ,linkWithGoogl
     verifyOTPCode , changePassword , editProfile , setRoleUser} = require('../controllers/userController');
 const router = require('express').Router();
 
-router.get('/profile', verifyToken, authorizeRoles('admin' , "user") , getUserProfile);
+router.get('/profile', verifyToken, authorizeRoles('admin' , "user" , "teacher" , "student" ) , getUserProfile);
 router.post('/linkgoogle/:token', verifyToken, authorizeRoles('admin',"user") , linkWithGoogle);
 router.post('/send-otp', verifyToken, authorizeRoles('admin',"user") , sendOTPCode);
 router.post('/verify-otp', verifyToken, authorizeRoles('admin',"user") , verifyOTPCode);

@@ -1,15 +1,21 @@
 const Class = require('../models/Class');
+const User = require('../models/User');
+const Teacher = require('../models/Teacher');
 
 const createClass = async (req, res) => {
     try {
-        const { title, subtitle, color, description, teacherId } = req.body;
+        const uid = req.user.id;
+        const teacher = await Teacher.findOne({ user: uid });
+        const { title, subtitle, color, description } = req.body;
         const newClass = new Class({
             title,
             subtitle,
             color,
             description,
-            teacher: teacherId
+            teacher: teacher._id
         });
+        teacher.classes.push(newClass._id);
+        await teacher.save();
         const savedClass = await newClass.save();
         res.status(201).json(savedClass);
     } catch (error) {
@@ -17,19 +23,30 @@ const createClass = async (req, res) => {
     }
 };
 
-
-
-// To fix : 
-// issues : * associate user as teacher / * send user id instead of teacher id 
-// possible solution : add user page to allow user to select plan to be a teacher 
 const getClassesByTeacher = async (req, res) => {
-    try {
-        const { teacherId } = req.params;
-        const classes = await Class.find({ teacher: teacherId });
-        res.status(200).json(classes);
+    try{
+        const uid = req.user.id;
+        const classes = await Teacher.findOne({ user: uid }).populate('classes');
+        if (!classes) {
+            return res.status(404).json({ message: 'Teacher not found' });
+        }
+        res.status(200).json(classes.classes);
+    }catch(err){
+        res.status(500).json({ message: 'Error fetching classes', error: err });
     }
-    catch (error) {
-        res.status(500).json({ message: 'Error fetching classes', error });
+};
+
+
+const getClassesByStudent = async (req, res) => {
+    try{
+        const uid = req.user.id;
+        const student = await User.findById(uid).populate('classes').populate("teacher").populate("user", "username pfpUrl");
+        if (!student) {
+            return res.status(404).json({ message: 'Student not found' });
+        }
+        res.status(200).json(student.classes);
+    }catch(err){
+        res.status(500).json({ message: 'Error fetching classes', error: err });
     }
 };
 
@@ -58,6 +75,11 @@ const deleteClass = async (req, res) => {
         if (!deletedClass) {
             return res.status(404).json({ message: 'Class not found' });
         }
+        const teacher = await Teacher.findOne({ classes: classId });
+        if (teacher) {
+            teacher.classes.pull(classId);
+            await teacher.save();
+        }
         res.status(200).json({ message: 'Class deleted successfully' });
     } catch (error) {
         res.status(500).json({ message: 'Error deleting class', error });
@@ -68,5 +90,6 @@ module.exports = {
     createClass,
     getClassesByTeacher,
     updateClass,
-    deleteClass
+    deleteClass,
+    getClassesByStudent
 };

@@ -2,6 +2,7 @@ import NavBar from "../Components/NavBar";
 import { useState } from "react";
 import SettingsModal from '../Components/SettingsModal';
 import ProfileModal from '../Components/ProfileModal';
+import { Outlet } from "react-router-dom";
 
 
 
@@ -13,6 +14,7 @@ const StudentPage = () => {
             <NavBar role="STUDENT" setOpen={setOpen} setProfileOpen={setProfileOpen} />
             <SettingsModal open={open} setOpen={setOpen} />
             <ProfileModal open={profileOpen} setOpen={setProfileOpen} />
+            <Outlet />
         </div>
     )
 }

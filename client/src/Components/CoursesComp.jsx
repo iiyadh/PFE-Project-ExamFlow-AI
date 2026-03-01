@@ -3,6 +3,7 @@ import { RightOutlined } from '@ant-design/icons';
 import { BookOpen } from 'lucide-react';
 import { useState } from 'react';
 import { useParams , useNavigate} from 'react-router-dom';
+import { useAuthStore } from '../store/authStore';
 
 const mockCourses = [
   {
@@ -80,6 +81,7 @@ const CoursesComp = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const { cid } = useParams();
   const navigate = useNavigate();
+  const { role } = useAuthStore();
 
 
 
@@ -141,7 +143,7 @@ const CoursesComp = () => {
                     >
                     </div>
                   }
-                  onClick={()=>navigate('/teacher/modules/' + course.id)}
+                  onClick={()=>navigate(`/${role}/modules/${course.id}`)}
                 >
                   {/* Title */}
                   <h3 className="text-lg font-semibold mb-3 text-text">

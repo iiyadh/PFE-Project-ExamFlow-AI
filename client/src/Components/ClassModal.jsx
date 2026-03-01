@@ -52,7 +52,7 @@ const ClassModal = ({ mode, open, onClose, classData, onSubmit, onDelete }) => {
 
     const handleDelete = async () => {
         setLoading(true);
-        await onDelete?.(classData?.id);
+        await onDelete?.(classData?._id);
         setLoading(false);
         onClose();
     };

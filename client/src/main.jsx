@@ -39,7 +39,13 @@ const router = createBrowserRouter([
         {index: true, element: <Navigate to="/dashboard/users" replace />},
         {path: 'users', element: <AdminUserList />},
       ]},
-      { path: '/student', element: <RequireAuth><RequireRole allowedRoles={['student', 'admin']}><StudentPage /></RequireRole></RequireAuth> },
+      { path: '/student', element: <RequireAuth><RequireRole allowedRoles={['student', 'admin']}><StudentPage /></RequireRole></RequireAuth> ,
+      children:[
+        { index: true, element: <Navigate to="/student/classes" replace />},
+        { path: 'classes', element: <ClassComp />},
+        { path: 'courses/:cid', element: <CoursesComp />},
+        { path: 'modules/:cid', element: <ModuleViewer />}
+      ]},
       { path: '/teacher', element: <RequireAuth><RequireRole allowedRoles={['teacher', 'admin']}><TeacherPage /></RequireRole></RequireAuth>,
       children:[
         { index: true, element: <Navigate to="/teacher/classes" replace />},

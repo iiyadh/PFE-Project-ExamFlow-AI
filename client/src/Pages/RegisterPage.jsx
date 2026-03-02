@@ -1,4 +1,4 @@
-import { Form, Input, Checkbox, Button } from 'antd';
+import { Form, Input, Checkbox, Button , notification } from 'antd';
 import { 
     Mail, 
     Lock, 
@@ -37,6 +37,11 @@ const RegisterPage = () => {
             navigate('/dashboard');
         }catch(err){
             console.error('Registration failed:', err);
+            notification.error({
+                message: 'Registration Failed',
+                description: err.response?.data?.message || 'An error occurred during registration. Please try again.',
+                placement: 'topRight',
+            });
         }finally{
             setLoading(false);
         }

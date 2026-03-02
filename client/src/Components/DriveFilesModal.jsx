@@ -14,8 +14,10 @@ import {
   ClockCircleOutlined,
   SyncOutlined,
   UploadOutlined,
+  DeleteOutlined,
 } from '@ant-design/icons';
 import { useState, useEffect } from 'react';
+import useDrivePicker from 'react-google-drive-picker';
 
 // ── Mock data (replace with real API call to GET /drive/files) ──────────────
 const mockDriveFiles = [
@@ -136,11 +138,13 @@ const StatusBadge = ({ status }) => {
 
 // ── Main Component ────────────────────────────────────────────────────────────
 const DriveFilesModal = ({ open, onClose, classData }) => {
-  const [files, setFiles] = useState([]);
+  const [files, setFiles] = useState([]); // Existing backend/fetched files
   const [filtered, setFiltered] = useState([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(false);
   const [converting, setConverting] = useState(null);
+
+  const [openPicker] = useDrivePicker();
 
   // Simulate fetching from GET /drive/files?classId=xxx
   const fetchFiles = () => {
@@ -190,6 +194,41 @@ const DriveFilesModal = ({ open, onClose, classData }) => {
     }, 1200);
   };
 
+    const handleGoogleImport = () => {
+    openPicker({
+      clientId: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+      developerKey: import.meta.env.VITE_GOOGLE_DEV_SECRET,
+      viewId: 'DOCS', // or 'FOLDERS'
+      showUploadView: false,
+      supportDrives: true,
+      multiselect: true,
+      callbackFunction: (data) => {
+        if (data.action === 'picked') {
+          const newFiles = data.docs.map((file) => ({
+            id: file.id,
+            name: file.name,
+            webViewLink: file.url,
+            mimeType: file.mimeType,
+            status: 'pending',
+            modifiedTime: new Date(file.lastEditedUtc).toISOString(),
+            size: file.sizeBytes ? `${(file.sizeBytes / (1024 * 1024)).toFixed(2)} MB` : 'Unknown',
+          }));
+          // Prevent duplicates
+          setFiles((prev) => {
+            const existingIds = new Set(prev.map((f) => f.id));
+            const uniqueNewFiles = newFiles.filter((f) => !existingIds.has(f.id));
+            return [...prev, ...uniqueNewFiles];
+          });
+          setFiltered((prev) => {
+            const existingIds = new Set(prev.map((f) => f.id));
+            const uniqueNewFiles = newFiles.filter((f) => !existingIds.has(f.id));
+            return [...prev, ...uniqueNewFiles];
+          });
+        }
+      },
+    });
+  };
+
 
 
   return (
@@ -230,6 +269,7 @@ const DriveFilesModal = ({ open, onClose, classData }) => {
               <Button
                 icon={<GoogleOutlined />}
                 className='border-border text-text hover:text-primary hover:border-primary'
+                onClick={handleGoogleImport}
               >
                 Import from Google Drive
               </Button>
@@ -321,6 +361,7 @@ const DriveFilesModal = ({ open, onClose, classData }) => {
                 {/* Action */}
                 <div className="shrink-0">
                   {file.status === 'converted' ? (
+                    <>
                     <Tooltip title="View converted course">
                       <Button 
                         size="small" 
@@ -330,6 +371,18 @@ const DriveFilesModal = ({ open, onClose, classData }) => {
                         View
                       </Button>
                     </Tooltip>
+                    <Tooltip title="Delete converted course">
+                      <Button
+                        size="small"
+                        type="text"
+                        danger
+                        className="p-0 hover:bg-red-50"
+                        icon={<DeleteOutlined />}
+                      >
+                        Delete
+                      </Button>
+                    </Tooltip>
+                    </>
                   ) : file.status === 'processing' ? (
                     <></>
                   ) : (

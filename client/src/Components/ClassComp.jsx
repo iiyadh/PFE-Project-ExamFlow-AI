@@ -8,77 +8,11 @@ import { useAuthStore } from '../store/authStore';
 import { useUserStore } from '../store/userStore';
 import api from '../lib/api';
 
-const classes = [
-  {
-    _id: '1',
-    title: 'Développement Mobile',
-    subtitle: 'abdelkader maatallah',
-    color: 'bg-emerald-500',
-    description : 'Explore the world of mobile app development with our comprehensive course.',
-    avatar: 'https://i.pravatar.cc/150?img=1',
-  },
-  {
-    _id: '2',
-    title: 'Big Data',
-    subtitle: 'abdelkader maatallah',
-    color: 'bg-emerald-500',
-    description : 'Explore the world of mobile app development with our comprehensive course.',
-    avatar: 'https://i.pravatar.cc/150?img=2',
-  },
-  {
-    _id: '3',
-    title: 'Architecture orientée services',
-    subtitle: 'abdelkader maatallah',
-    color: 'bg-blue-600',
-    description : 'Explore the world of mobile app development with our comprehensive course.',
-    avatar: 'https://i.pravatar.cc/150?img=3',
-  },
-  {
-    _id: '4',
-    title: 'DSI 3 Promo 2025-2026',
-    subtitle: 'Hathem Hafsi',
-    color: 'bg-teal-500',
-    description : 'Explore the world of mobile app development with our comprehensive course.',
-    avatar: 'https://i.pravatar.cc/150?img=4',
-  },
-  {
-    _id: '5',
-    title: "TEST D'APPLICATION",
-    subtitle: 'DSI 21-22-23',
-    color: 'bg-emerald-500',
-    description : 'Explore the world of mobile app development with our comprehensive course.',
-    initial: 'M',
-  },
-  {
-    _id: '6',
-    title: 'Python avancé',
-    subtitle: 'DSI21 - 2024/2025',
-    color: 'bg-slate-600',
-    description : 'Explore the world of mobile app development with our comprehensive course.',
-    avatar: 'https://i.pravatar.cc/150?img=5',
-  },
-  {
-    _id: '7',
-    title: 'Atelier JEE',
-    subtitle: 'DSI21 - 2024/2025',
-    color: 'bg-orange-500',
-    description : 'Explore the world of mobile app development with our comprehensive course.',
-    avatar: 'https://i.pravatar.cc/150?img=6',
-  },
-  {
-    _id: '8',
-    title: 'Solutions Lab Club',
-    subtitle: 'Problem solving & Competitive programming',
-    color: 'bg-purple-600',
-    description : 'Explore the world of mobile app development with our comprehensive course.',
-    avatar: 'https://i.pravatar.cc/150?img=7',
-  },
-];
 
 const ClassComp = () => {
-    const [classesData, setClassesData] = useState(classes);
+    const [classesData, setClassesData] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
-    const [filteredClasses, setFilteredClasses] = useState(classes);
+    const [filteredClasses, setFilteredClasses] = useState([]);
     const [modalOpen, setModalOpen] = useState(false);
     const [modalMode, setModalMode] = useState('create');
     const [selectedClass, setSelectedClass] = useState(null);

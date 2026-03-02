@@ -167,7 +167,7 @@ const ClassModal = ({ mode, open, onClose, classData, onSubmit, onDelete }) => {
                         rules={[{ required: true, message: 'Please enter a class title' }]}
                     >
                         <Input 
-                            placeholder="e.g., Introduction to Computer Science"
+                            placeholder="Enter class title ..."
                             size="large"
                             prefix={<BookOutlined className="text-text-muted mr-2" />}
                             className="bg-surface! border-border! text-text! placeholder:text-text-muted! hover:border-primary! focus:border-primary!"
@@ -180,7 +180,7 @@ const ClassModal = ({ mode, open, onClose, classData, onSubmit, onDelete }) => {
                         rules={[{ required: true, message: 'Please enter a subtitle' }]}
                     >
                         <Input 
-                            placeholder="e.g., DSI21 - 2024/2025"
+                            placeholder="Enter a subtitle ..."
                             size="large"
                             prefix={<InfoCircleOutlined className="text-text-muted mr-2" />}
                             className="bg-surface! border-border! text-text! placeholder:text-text-muted! hover:border-primary! focus:border-primary!"

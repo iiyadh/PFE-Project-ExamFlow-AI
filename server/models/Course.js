@@ -9,6 +9,14 @@ const courseSchema = new mongoose.Schema({
     description: {
         type: String
     },
+    level: {
+        type: String,
+        enum: ['Beginner', 'Intermediate', 'Advanced'],
+        default: 'Beginner'
+    },
+    image: {
+        type: String
+    },
     markdownContent: [
         {
             type: mongoose.Schema.Types.ObjectId,

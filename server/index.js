@@ -21,6 +21,7 @@ app.use('/api/password', require('./routes/passwordRoutes'));
 app.use('/api/user', require('./routes/userRoutes'));
 app.use('/api/class', require('./routes/classRoutes'));
 app.use('/api/file', require('./routes/fileRoutes'));
+app.use('/api/student', require('./routes/studentRoutes'));
 
 
 

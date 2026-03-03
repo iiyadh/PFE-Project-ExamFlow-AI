@@ -2,31 +2,32 @@ import { Modal, Avatar } from 'antd';
 import { CheckOutlined, LoadingOutlined, CloseOutlined, UserOutlined } from '@ant-design/icons';
 import { Inbox } from 'lucide-react';
 import { useState, useEffect } from 'react';
-
-// Mock incoming request data
-const MOCK_REQUESTS = [
-    { _id: '1',className:"Ai Intro", teacherName: 'Sarah Johnson', pfpUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah', requestedAt: '2 hours ago' },
-    { _id: '2',className:"Ai Intro", teacherName: 'Mike Chen', pfpUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Mike', requestedAt: '5 hours ago' },
-    { _id: '3',className:"Ai Intro", teacherName: 'Alex Rivera', pfpUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Alex', requestedAt: '1 day ago' },
-    { _id: '4',className:"Ai Intro", teacherName: 'Emma Watson', pfpUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Emma', requestedAt: '2 days ago' },
-    { _id: '5',className:"Ai Intro", teacherName: 'James Okonkwo', pfpUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=James', requestedAt: '3 days ago' },
-];
+import api from '../lib/api';
 
 const RequestRow = ({ request, onAccept, onDecline }) => {
     const [status, setStatus] = useState('pending'); // pending | accepting | declining | accepted | declined
 
     const handleAccept = async () => {
-        setStatus('accepting');
-        await new Promise(res => setTimeout(res, 900));
-        setStatus('accepted');
-        onAccept?.(request._id);
+        try{
+            setStatus('accepting');
+            await api.post(`/student/request`,{studentId: request.studentId, classId: request.classId, action: 'accept'});
+            setStatus('accepted');
+            onAccept?.(request._id);
+            window.location.reload();
+        }catch(err){
+            console.error('Failed to accept request:', err);
+        }
     };
 
     const handleDecline = async () => {
-        setStatus('declining');
-        await new Promise(res => setTimeout(res, 900));
-        setStatus('declined');
-        onDecline?.(request._id);
+        try{
+            setStatus('declining');
+            await api.post(`/student/request`,{studentId: request.studentId, classId: request.classId, action: 'reject'});
+            setStatus('declined');
+            onDecline?.(request._id);
+        }catch(err){
+            console.error('Failed to decline request:', err);
+        }
     };
 
     return (
@@ -51,7 +52,7 @@ const RequestRow = ({ request, onAccept, onDecline }) => {
                     {request.className}
                 </p>
                 <p className="text-xs truncate" style={{ color: 'var(--color-text-muted)' }}>
-                    {request.teacherName} . {request.requestedAt}
+                    {request.teacherName} wants you to join their class
                 </p>
             </div>
 
@@ -112,16 +113,21 @@ const RequestRow = ({ request, onAccept, onDecline }) => {
     );
 };
 
-const ReciveRequestModal = ({ open, onClose }) => {
-    const [requests, setRequests] = useState(MOCK_REQUESTS);
+const ReciveRequestModal = ({ open, onClose , onRefresh }) => {
+    const [requests, setRequests] = useState([]);
+    
+    const fetchRequests = async () => {
+        try {
+            const res = await api.get('/student/requests');
+            setRequests(res.data);
+        } catch (error) {
+            console.error('Failed to fetch requests:', error);
+        }
+    };
 
     useEffect(() => {
-        if (!open) {
-            setRequests(MOCK_REQUESTS);
-        }
-    }, [open]);
-
-    const pendingCount = requests.length;
+        fetchRequests();
+    }, [fetchRequests]);
 
     return (
         <Modal
@@ -167,7 +173,7 @@ const ReciveRequestModal = ({ open, onClose }) => {
                     {requests.length > 0 ? (
                         <div className="px-2 pb-3">
                             {requests.map(request => (
-                                <RequestRow key={request._id} request={request} />
+                                <RequestRow key={request._id} request={request} onAccept={()=>onRefresh} />
                             ))}
                         </div>
                     ) : (

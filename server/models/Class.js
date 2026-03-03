@@ -23,6 +23,10 @@ const classSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Course'
     }],
+    students: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Student'
+    }],
     files: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'File'

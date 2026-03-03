@@ -26,7 +26,6 @@ export const useUserStore = create(persist((set) => ({
         try {
             const res = await api.get('/user/profile');
             const { username, status, pfpUrl, numTel, lastLogin, address , email , googleId } = res.data;
-            console.log(username, status, pfpUrl, numTel, lastLogin, address , email , googleId);
             set({ username, status, pfpUrl, numTel, lastLogin, address , email , googleId });
         } catch (err) {
             throw err;

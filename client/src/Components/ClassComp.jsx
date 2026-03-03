@@ -9,6 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { useUserStore } from '../store/userStore';
 import api from '../lib/api';
+import { LogOut } from 'lucide-react';
 
 
 const ClassComp = () => {
@@ -42,9 +43,28 @@ const ClassComp = () => {
       }
     }
 
+    const fetchStudentClasses = async () => {
+      try{
+        const res = await api.get('/class/student');
+        const data = res.data;
+        const classesWithAvatar = data.map(clas => ({
+          ...clas,
+          avatar: clas.teacherPfp,
+          initial: clas.title.charAt(0).toUpperCase(),
+        }));
+        setClassesData(classesWithAvatar);
+        setFilteredClasses(classesWithAvatar);
+      }catch(err){
+        console.error('Error fetching classes:', err);
+      }
+    }
+    
     useEffect(() => {
       if(role === 'teacher') {
         fetchTeacherClasses();
+      }
+      else if(role === 'student') {
+        fetchStudentClasses();
       }
     }, []);
 
@@ -98,6 +118,20 @@ const ClassComp = () => {
         console.error('Error deleting class:', err);
       }
     };
+
+    const handleLeave = async (classId) => {
+        try{
+            await api.post('/student/leave', { classId });
+            const updatedClasses = classesData.filter(clas => clas._id !== classId);
+            setClassesData(updatedClasses);
+            setFilteredClasses(updatedClasses);
+            setSelectedClass(null);
+            setModalRequesting(false);
+        }
+        catch(err){
+            console.error('Error leaving class:', err);
+        }
+      };
 
 
 
@@ -245,14 +279,27 @@ const ClassComp = () => {
                       </Dropdown>
                     </>)}
                   {role === 'student' && (
-                    <button
-                      className="text-text-muted hover:text-text-secondary transition-colors"
-                      onClick={() => { setSelectedClass(clas); setModalRequesting(true); }}
-                    >
-                      <Tooltip title="Request to join class" placement="top">
-                        <UsergroupAddOutlined className="text-lg" />
-                      </Tooltip>
-                    </button>
+                  <Dropdown
+                        menu={{
+                          items: [
+                            {
+                              key: '3',
+                              label: 'Leave Class',
+                              danger: true,
+                              icon: <LogOut />,
+                              onClick: () => { handleLeave(clas._id); }
+                            },
+                          ],
+                        }}
+                        trigger={['click']}
+                        placement="bottomRight"
+                        arrow
+                        className="cursor-pointer"
+                      >
+                        <div className="text-text-muted hover:text-text-secondary transition-colors">
+                          <EllipsisOutlined className="text-lg text-text-muted hover:text-text-secondary transition-colors" />
+                        </div>
+                    </Dropdown>
                   )}
                 </div>
           </div>
@@ -274,28 +321,34 @@ const ClassComp = () => {
           )}
         </div>
       </div>
-    <ClassModal
-        mode={modalMode}
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
-        classData={selectedClass}
-        onSubmit={(data) => handleSubmit(data)}
-        onDelete={(id) => handleDelete(id)}
-    />
-    <DriveFilesModal
-        open={driveModalOpen}
-        onClose={() => setDriveModalOpen(false)}
-        classData={driveClass}
-    />
-    <SendRequestModal
-        open={modalRequesting}
-        onClose={() => setModalRequesting(false)}
-        classData={selectedClass}
-    />
-    <ReciveRequestModal
-        open={modalReciveing}
-        onClose={() => setmodalReciveing(false)}
-    />
+      {role === 'teacher' && <>
+        <ClassModal
+          mode={modalMode}
+          open={modalOpen}
+          onClose={() => setModalOpen(false)}
+          classData={selectedClass}
+          onSubmit={(data) => handleSubmit(data)}
+          onDelete={(id) => handleDelete(id)}
+        />
+        <DriveFilesModal
+          open={driveModalOpen}
+          onClose={() => setDriveModalOpen(false)}
+          classData={driveClass}
+        />
+        <SendRequestModal
+          open={modalRequesting}
+          onClose={() => setModalRequesting(false)}
+          classData={selectedClass}
+        />
+      </>}
+      {role === 'student' &&
+        <ReciveRequestModal
+          open={modalReciveing}
+          onClose={() => setmodalReciveing(false)}
+          onRefresh={() => {
+            fetchStudentClasses();
+          }}
+        />}
     </div>
   );
 }

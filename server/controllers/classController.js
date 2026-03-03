@@ -43,11 +43,21 @@ const getClassesByTeacher = async (req, res) => {
 const getClassesByStudent = async (req, res) => {
     try{
         const uid = req.user.id;
-        const student = await User.findById(uid).populate('classes').populate("teacher").populate("user", "username pfpUrl");
-        if (!student) {
-            return res.status(404).json({ message: 'Student not found' });
+        const student = await Student.findOne({ user: uid }).populate('classes');
+        let classes = [];
+        for (const classObj of student.classes) {
+            const teacher = await Teacher.findById(classObj.teacher).populate('user');
+            classes.push({
+                _id: classObj._id,
+                title: classObj.title,
+                subtitle: classObj.subtitle,
+                color: classObj.color,
+                description: classObj.description,
+                teacherName: teacher.user.username,
+                teacherPfp: teacher.user.pfpUrl
+            });
         }
-        res.status(200).json(student.classes);
+        res.status(200).json(classes);
     }catch(err){
         res.status(500).json({ message: 'Error fetching classes', error: err });
     }

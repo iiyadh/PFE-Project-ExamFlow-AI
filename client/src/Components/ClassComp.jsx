@@ -1,8 +1,10 @@
 import { Avatar, Button, Input ,Dropdown, Tooltip} from 'antd';
-import { FolderOutlined, EllipsisOutlined, PlusOutlined ,EditOutlined  ,DeleteOutlined } from '@ant-design/icons';
+import { FolderOutlined, EllipsisOutlined, PlusOutlined ,EditOutlined  ,DeleteOutlined, UsergroupAddOutlined } from '@ant-design/icons';
 import { useState, useEffect } from 'react';
 import ClassModal from './ClassModal';
 import DriveFilesModal from "../Components/DriveFilesModal";
+import SendRequestModal from './SendRequestModal';
+import ReciveRequestModal from './ReciveRequestModal';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { useUserStore } from '../store/userStore';
@@ -15,7 +17,9 @@ const ClassComp = () => {
     const [filteredClasses, setFilteredClasses] = useState([]);
     const [modalOpen, setModalOpen] = useState(false);
     const [modalMode, setModalMode] = useState('create');
+    const [modalRequesting, setModalRequesting] = useState(false);
     const [selectedClass, setSelectedClass] = useState(null);
+    const [modalReciveing, setmodalReciveing] = useState(false);
     const [driveModalOpen, setDriveModalOpen] = useState(false);
     const [driveClass, setDriveClass] = useState(null);
     const { role } = useAuthStore();
@@ -123,6 +127,17 @@ const ClassComp = () => {
                     >
                             Create New Class
                     </Button>}
+                    {role === 'student' &&
+                    <Button
+                            type="primary"
+                            size="large"                           
+                            className="flex items-center justify-center gap-2 w-full md:w-auto"
+                            icon={<PlusOutlined />}
+                            onClick={() => { setmodalReciveing(true); }}
+                          >
+                            Join Class
+                          </Button>
+                    }
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -183,46 +198,63 @@ const ClassComp = () => {
                     </div>
                 )}
               </div>
-            {
-              role === 'teacher' && (
                 <div className="border-t border-border p-4 flex items-center justify-center gap-6" onClick={(e) => e.stopPropagation()}>
-                  <button
-                    className="text-text-muted hover:text-text-secondary transition-colors"
-                    onClick={() => { setDriveClass(clas); setDriveModalOpen(true); }}
-                  >
-                    <Tooltip title="Explore Google Drive Files" placement="top">
-                      <FolderOutlined className="text-lg" />
-                    </Tooltip>
-                  </button>
-                  <Dropdown
-                    menu={{
-                      items: [
-                        {
-                          key: '2',
-                          label: 'Edit Class',
-                          icon: <EditOutlined />,
-                          onClick: () => { setModalMode('edit'); setSelectedClass(clas); setModalOpen(true) }
-                        },
-                        {
-                          key: '3',
-                          label: 'Delete Class',
-                          danger: true,
-                          icon: <DeleteOutlined />,
-                          onClick: () => { setModalMode('delete'); setSelectedClass(clas); setModalOpen(true) }
-                        },
-                      ],
-                    }}
-                    trigger={['click']}
-                    placement="bottomRight"
-                    arrow
-                    className="cursor-pointer"
-                  >
-                    <div className="text-text-muted hover:text-text-secondary transition-colors">
-                      <EllipsisOutlined className="text-lg text-text-muted hover:text-text-secondary transition-colors" />
-                    </div>
-                  </Dropdown>
-                </div>)
-            }
+                  {role === 'teacher' && (
+                    <>
+                      <button
+                        className="text-text-muted hover:text-text-secondary transition-colors"
+                        onClick={() => { setSelectedClass(clas); setModalRequesting(true); }}>
+                        <Tooltip title="Send student request" placement="top">
+                          <UsergroupAddOutlined className="text-lg" />
+                        </Tooltip>
+                      </button>
+                      <button
+                        className="text-text-muted hover:text-text-secondary transition-colors"
+                        onClick={() => { setDriveClass(clas); setDriveModalOpen(true); }}
+                      >
+                        <Tooltip title="Explore Google Drive Files" placement="top">
+                          <FolderOutlined className="text-lg" />
+                        </Tooltip>
+                      </button>
+                      <Dropdown
+                        menu={{
+                          items: [
+                            {
+                              key: '2',
+                              label: 'Edit Class',
+                              icon: <EditOutlined />,
+                              onClick: () => { setModalMode('edit'); setSelectedClass(clas); setModalOpen(true) }
+                            },
+                            {
+                              key: '3',
+                              label: 'Delete Class',
+                              danger: true,
+                              icon: <DeleteOutlined />,
+                              onClick: () => { setModalMode('delete'); setSelectedClass(clas); setModalOpen(true) }
+                            },
+                          ],
+                        }}
+                        trigger={['click']}
+                        placement="bottomRight"
+                        arrow
+                        className="cursor-pointer"
+                      >
+                        <div className="text-text-muted hover:text-text-secondary transition-colors">
+                          <EllipsisOutlined className="text-lg text-text-muted hover:text-text-secondary transition-colors" />
+                        </div>
+                      </Dropdown>
+                    </>)}
+                  {role === 'student' && (
+                    <button
+                      className="text-text-muted hover:text-text-secondary transition-colors"
+                      onClick={() => { setSelectedClass(clas); setModalRequesting(true); }}
+                    >
+                      <Tooltip title="Request to join class" placement="top">
+                        <UsergroupAddOutlined className="text-lg" />
+                      </Tooltip>
+                    </button>
+                  )}
+                </div>
           </div>
           ))}
           {filteredClasses.length === 0 && (
@@ -254,6 +286,15 @@ const ClassComp = () => {
         open={driveModalOpen}
         onClose={() => setDriveModalOpen(false)}
         classData={driveClass}
+    />
+    <SendRequestModal
+        open={modalRequesting}
+        onClose={() => setModalRequesting(false)}
+        classData={selectedClass}
+    />
+    <ReciveRequestModal
+        open={modalReciveing}
+        onClose={() => setmodalReciveing(false)}
     />
     </div>
   );

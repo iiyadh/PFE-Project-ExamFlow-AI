@@ -26,6 +26,10 @@ const classSchema = new mongoose.Schema({
     files: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'File'
+    }],
+    sentRequests: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Student'
     }]
 }, { timestamps: true });
 

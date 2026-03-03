@@ -11,6 +11,10 @@ const studentSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Class'
     }],
+    requests: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Class'
+    }]
 }, { timestamps: true });
 
 

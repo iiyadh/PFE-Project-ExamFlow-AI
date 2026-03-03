@@ -191,7 +191,7 @@ const UserOrientationComp = () => {
                 <ul className="text-left w-full mb-8 space-y-3">
                   <li className="flex items-center gap-2 text-text-secondary">
                     <Sparkles className="w-4 h-4 text-accent" />
-                    <span>Access to all courses</span>
+                    <span>Join Classes</span>
                   </li>
                   <li className="flex items-center gap-2 text-text-secondary">
                     <Sparkles className="w-4 h-4 text-accent" />

@@ -20,6 +20,7 @@ app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/password', require('./routes/passwordRoutes'));
 app.use('/api/user', require('./routes/userRoutes'));
 app.use('/api/class', require('./routes/classRoutes'));
+app.use('/api/file', require('./routes/fileRoutes'));
 
 
 

@@ -22,6 +22,10 @@ const classSchema = new mongoose.Schema({
     courses: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Course'
+    }],
+    files: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'File'
     }]
 }, { timestamps: true });
 

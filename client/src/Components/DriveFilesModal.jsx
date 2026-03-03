@@ -9,7 +9,7 @@ import {
   SearchOutlined,
   ReloadOutlined,
   ImportOutlined,
-  GoogleOutlined,
+  FolderOpenOutlined,
   CheckCircleFilled,
   ClockCircleOutlined,
   SyncOutlined,
@@ -17,65 +17,9 @@ import {
   DeleteOutlined,
 } from '@ant-design/icons';
 import { useState, useEffect } from 'react';
-import useDrivePicker from 'react-google-drive-picker';
+import { uploadToCloudinary } from '../lib/cloudinary';
+import api from '../lib/api';
 
-// ── Mock data (replace with real API call to GET /drive/files) ──────────────
-const mockDriveFiles = [
-  {
-    id: 'f1',
-    name: 'Cours_Développement_Mobile_S1.pdf',
-    mimeType: 'application/pdf',
-    modifiedTime: '2025-01-15T10:30:00Z',
-    size: '2.4 MB',
-    status: 'converted',      // converted | pending | processing
-    webViewLink: '#',
-  },
-  {
-    id: 'f2',
-    name: 'TP1_BigData_Hadoop.docx',
-    mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    modifiedTime: '2025-01-20T14:00:00Z',
-    size: '845 KB',
-    status: 'pending',
-    webViewLink: '#',
-  },
-  {
-    id: 'f3',
-    name: 'Architecture_SOA_Slides.pptx',
-    mimeType: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-    modifiedTime: '2025-01-22T09:15:00Z',
-    size: '5.1 MB',
-    status: 'processing',
-    webViewLink: '#',
-  },
-  {
-    id: 'f4',
-    name: 'Python_Avancé_Chap3.pdf',
-    mimeType: 'application/pdf',
-    modifiedTime: '2025-01-25T16:45:00Z',
-    size: '1.8 MB',
-    status: 'converted',
-    webViewLink: '#',
-  },
-  {
-    id: 'f5',
-    name: 'JEE_Atelier_Spring_Boot.docx',
-    mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    modifiedTime: '2025-01-28T11:20:00Z',
-    size: '620 KB',
-    status: 'pending',
-    webViewLink: '#',
-  },
-  {
-    id: 'f6',
-    name: 'Competitive_Programming_Notes.pdf',
-    mimeType: 'application/pdf',
-    modifiedTime: '2025-02-01T08:00:00Z',
-    size: '3.2 MB',
-    status: 'converted',
-    webViewLink: '#',
-  },
-];
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 const getFileIcon = (mimeType) => {
@@ -143,18 +87,20 @@ const DriveFilesModal = ({ open, onClose, classData }) => {
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(false);
   const [converting, setConverting] = useState(null);
-
-  const [openPicker] = useDrivePicker();
+  const [uploading, setUploading] = useState(false);
 
   // Simulate fetching from GET /drive/files?classId=xxx
-  const fetchFiles = () => {
+  const fetchFiles = async () => {
     setLoading(true);
-    setSearch('');
-    setTimeout(() => {
-      setFiles(mockDriveFiles);
-      setFiltered(mockDriveFiles);
+    try {
+      const res = await api.get(`/file/${classData._id}`);
+      setFiles(res.data);
+      setFiltered(res.data);
+    } catch (err) {
+      console.error('Error fetching files:', err);
+    } finally {
       setLoading(false);
-    }, 900);
+    }
   };
 
   useEffect(() => {
@@ -172,61 +118,64 @@ const DriveFilesModal = ({ open, onClose, classData }) => {
 
   // Simulate POST /drive/import  →  triggers FastAPI conversion
   const handleConvert = (file) => {
-    setConverting(file.id);
-    setTimeout(() => {
+    setConverting(file._id);
       setFiles((prev) =>
-        prev.map((f) => (f.id === file.id ? { ...f, status: 'processing' } : f))
+        prev.map((f) => (f._id === file._id ? { ...f, status: 'processing' } : f))
       );
       setFiltered((prev) =>
-        prev.map((f) => (f.id === file.id ? { ...f, status: 'processing' } : f))
+        prev.map((f) => (f._id === file._id ? { ...f, status: 'processing' } : f))
       );
       setConverting(null);
-
       // Simulate conversion completing after 3s
       setTimeout(() => {
         setFiles((prev) =>
-          prev.map((f) => (f.id === file.id ? { ...f, status: 'converted' } : f))
+          prev.map((f) => (f._id === file._id ? { ...f, status: 'converted' } : f))
         );
         setFiltered((prev) =>
-          prev.map((f) => (f.id === file.id ? { ...f, status: 'converted' } : f))
+          prev.map((f) => (f._id === file._id ? { ...f, status: 'converted' } : f))
         );
       }, 3000);
-    }, 1200);
   };
 
-    const handleGoogleImport = () => {
-    openPicker({
-      clientId: import.meta.env.VITE_GOOGLE_CLIENT_ID,
-      developerKey: import.meta.env.VITE_GOOGLE_DEV_SECRET,
-      viewId: 'DOCS', // or 'FOLDERS'
-      showUploadView: false,
-      supportDrives: true,
-      multiselect: true,
-      callbackFunction: (data) => {
-        if (data.action === 'picked') {
-          const newFiles = data.docs.map((file) => ({
-            id: file.id,
-            name: file.name,
-            webViewLink: file.url,
-            mimeType: file.mimeType,
-            status: 'pending',
-            modifiedTime: new Date(file.lastEditedUtc).toISOString(),
-            size: file.sizeBytes ? `${(file.sizeBytes / (1024 * 1024)).toFixed(2)} MB` : 'Unknown',
-          }));
-          // Prevent duplicates
-          setFiles((prev) => {
-            const existingIds = new Set(prev.map((f) => f.id));
-            const uniqueNewFiles = newFiles.filter((f) => !existingIds.has(f.id));
-            return [...prev, ...uniqueNewFiles];
-          });
-          setFiltered((prev) => {
-            const existingIds = new Set(prev.map((f) => f.id));
-            const uniqueNewFiles = newFiles.filter((f) => !existingIds.has(f.id));
-            return [...prev, ...uniqueNewFiles];
-          });
-        }
-      },
-    });
+
+
+  const handleUpload = async (file) => {
+    try{
+      setUploading(true);
+      const res = await uploadToCloudinary(file, `class_${classData._id}`, file.uid);
+      console.log(res);
+      if(res.secure_url){
+        const newFile = {
+          name: file.name,
+          mimeType: file.type,
+          modifiedTime: new Date().toISOString(),
+          size: `${(file.size / (1024 * 1024)).toFixed(2)} MB`,
+          status: 'pending',
+          webViewLink: res.secure_url,
+          public_id: res.public_id,
+        };
+        const saveRes = await api.post(`/file/${classData._id}`, newFile);
+        const savedFile = saveRes.data;
+        setFiles((prev) => [...prev, savedFile]);
+        setFiltered((prev) => [...prev, savedFile]);
+      } else {
+        console.error('Cloudinary upload did not return a secure URL:', res);
+      }
+    }catch(err){
+      console.error('Upload failed:', err);
+    }finally{
+      setUploading(false);
+    }
+  };
+
+  const handleDelete = async (file) => {
+    try{
+      await api.delete(`/file/${file._id}`);
+      setFiles((prev) => prev.filter((f) => f._id !== file._id));
+      setFiltered((prev) => prev.filter((f) => f._id !== file._id));
+    }catch(err){
+      console.error('Delete failed:', err);
+    }
   };
 
 
@@ -249,16 +198,17 @@ const DriveFilesModal = ({ open, onClose, classData }) => {
         mask: { backdropFilter: 'blur(4px)' },
       }}
     >
+      <>
       {/* ── Header ── */}
       <div className="px-6 py-5">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="bg-bg/20 dark:bg-primary/30 rounded-lg p-2">
-              <GoogleOutlined className="text-white text-xl" />
+              <FolderOpenOutlined  className="text-white text-xl" />
             </div>
             <div>
               <h2 className="text-text font-semibold text-lg leading-tight">
-                Google Drive Files
+                Drive Files
               </h2>
               <p className="text-text/80 dark:text-text-secondary text-sm">
                 {classData?.title || 'Course Files'}
@@ -266,20 +216,16 @@ const DriveFilesModal = ({ open, onClose, classData }) => {
             </div>
           </div>
           <div className="flex gap-2">
-              <Button
-                icon={<GoogleOutlined />}
-                className='border-border text-text hover:text-primary hover:border-primary'
-                onClick={handleGoogleImport}
-              >
-                Import from Google Drive
-              </Button>
               <Upload
                 name="file"
                 multiple
                 showUploadList={false}
+                customRequest={({ file }) => handleUpload(file)}
+                loading={uploading}
               >
                 <Button
                   className="border-border text-text hover:text-primary hover:border-primary"
+                  loading={uploading}
                 >
                   <UploadOutlined className="text-lg" />
                   Upload File
@@ -378,6 +324,7 @@ const DriveFilesModal = ({ open, onClose, classData }) => {
                         danger
                         className="p-0 hover:bg-red-50"
                         icon={<DeleteOutlined />}
+                        onClick={() => handleDelete(file)}
                       >
                         Delete
                       </Button>
@@ -418,6 +365,7 @@ const DriveFilesModal = ({ open, onClose, classData }) => {
           Close
         </Button>
       </div>
+      </>
     </Modal>
   );
 };

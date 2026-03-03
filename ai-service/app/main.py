@@ -5,7 +5,7 @@ from app.services.file_service import (
     download_file,
     extract_text
 )
-from app.services.ai_service import structure_content
+from app.services.convert_ai_service import structure_content
 
 app = FastAPI()
 

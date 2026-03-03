@@ -5,11 +5,11 @@ import { useState, useEffect } from 'react';
 
 // Mock incoming request data
 const MOCK_REQUESTS = [
-    { _id: '1', username: 'sarah_johnson', displayName: 'Sarah Johnson', pfpUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah', requestedAt: '2 hours ago' },
-    { _id: '2', username: 'mike_chen', displayName: 'Mike Chen', pfpUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Mike', requestedAt: '5 hours ago' },
-    { _id: '3', username: 'alex_rivera', displayName: 'Alex Rivera', pfpUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Alex', requestedAt: '1 day ago' },
-    { _id: '4', username: 'emma_watson_dev', displayName: 'Emma Watson', pfpUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Emma', requestedAt: '2 days ago' },
-    { _id: '5', username: 'james_okonkwo', displayName: 'James Okonkwo', pfpUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=James', requestedAt: '3 days ago' },
+    { _id: '1',className:"Ai Intro", teacherName: 'Sarah Johnson', pfpUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah', requestedAt: '2 hours ago' },
+    { _id: '2',className:"Ai Intro", teacherName: 'Mike Chen', pfpUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Mike', requestedAt: '5 hours ago' },
+    { _id: '3',className:"Ai Intro", teacherName: 'Alex Rivera', pfpUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Alex', requestedAt: '1 day ago' },
+    { _id: '4',className:"Ai Intro", teacherName: 'Emma Watson', pfpUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Emma', requestedAt: '2 days ago' },
+    { _id: '5',className:"Ai Intro", teacherName: 'James Okonkwo', pfpUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=James', requestedAt: '3 days ago' },
 ];
 
 const RequestRow = ({ request, onAccept, onDecline }) => {
@@ -48,10 +48,10 @@ const RequestRow = ({ request, onAccept, onDecline }) => {
             {/* User info */}
             <div className="flex-1 min-w-0">
                 <p className="font-semibold truncate text-sm" style={{ color: 'var(--color-text)' }}>
-                    {request.displayName}
+                    {request.className}
                 </p>
                 <p className="text-xs truncate" style={{ color: 'var(--color-text-muted)' }}>
-                    @{request.username} · {request.requestedAt}
+                    {request.teacherName} . {request.requestedAt}
                 </p>
             </div>
 

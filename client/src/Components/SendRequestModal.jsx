@@ -2,29 +2,24 @@ import { Modal,  Avatar, } from 'antd';
 import { SearchOutlined, UserAddOutlined, CheckOutlined, LoadingOutlined, CloseOutlined, UserOutlined } from '@ant-design/icons';
 import { Search } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
+import api from '../lib/api';
 
 
-// Mock user data
-const MOCK_USERS = [
-    { _id: '1', username: 'sarah_johnson', username: 'Sarah Johnson', pfpUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah',  },
-    { _id: '2', username: 'mike_chen', username: 'Mike Chen', pfpUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Mike',  },
-    { _id: '3', username: 'alex_rivera', username: 'Alex Rivera', pfpUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Alex',  },
-    { _id: '4', username: 'emma_watson_dev', username: 'Emma Watson', pfpUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Emma',  },
-    { _id: '5', username: 'james_okonkwo', username: 'James Okonkwo', pfpUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=James',  },
-    { _id: '6', username: 'priya_sharma', username: 'Priya Sharma', pfpUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Priya',  },
-    { _id: '7', username: 'lucas_martin', username: 'Lucas Martin', pfpUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Lucas',  },
-    { _id: '8', username: 'sofia_delgado', username: 'Sofia Delgado', pfpUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sofia',  },
-];
-
-const UserRow = ({ user, onSendRequest }) => {
-    const [status, setStatus] = useState('idle'); // idle | loading | sent
+const UserRow = ({ student, onSendRequest , cid }) => {
+    const [status, setStatus] = useState('idle');
 
     const handleSend = async () => {
-        setStatus('loading');
-        await new Promise(res => setTimeout(res, 900));
-        setStatus('sent');
-        onSendRequest?.(user._id);
-    };
+        try{
+            setStatus('loading');
+            await api.post('/class/joinrequests', { cid , sid: student._id });
+            setStatus('sent');
+            onSendRequest?.(student._id);
+        }catch(err){
+            console.error('Error sending join request:', err);
+            setStatus('error');
+            setTimeout(() => setStatus('idle'), 2000);
+        }
+    }
 
     return (
         <div
@@ -34,7 +29,7 @@ const UserRow = ({ user, onSendRequest }) => {
             {/* Avatar with online indicator */}
             <div className="relative shrink-0">
                 <Avatar
-                    src={user.pfpUrl}
+                    src={student.pfpUrl}
                     size={46}
                     icon={<UserOutlined />}
                     className="border-2"
@@ -45,26 +40,29 @@ const UserRow = ({ user, onSendRequest }) => {
             {/* User info */}
             <div className="flex-1 min-w-0">
                 <p className="font-semibold truncate text-sm" style={{ color: 'var(--color-text)' }}>
-                    {user.username}
+                    {student.username}
                 </p>
             </div>
 
             {/* Action button */}
             <button
                 onClick={handleSend}
-                disabled={status !== 'idle'}
+                disabled={status === 'loading' || status === 'sent'}
                 className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 cursor-pointer disabled:cursor-default"
                 style={
                     status === 'sent'
                         ? { background: 'var(--color-success)', color: '#fff', opacity: 0.85 }
                         : status === 'loading'
                         ? { background: 'var(--color-surface-alt)', color: 'var(--color-text-muted)', border: '1px solid var(--color-border)' }
+                        : status === 'error'
+                        ? { background: 'var(--color-error)', color: '#fff' }
                         : { background: 'var(--color-primary)', color: '#fff' }
                 }
             >
                 {status === 'idle' && <><UserAddOutlined style={{ fontSize: 12 }} /> Invite</>}
                 {status === 'loading' && <><LoadingOutlined style={{ fontSize: 12 }} /> Sending</>}
                 {status === 'sent' && <><CheckOutlined style={{ fontSize: 12 }} /> Sent</>}
+                {status === 'error' && <><CloseOutlined style={{ fontSize: 12 }} /> Failed</>}
             </button>
         </div>
     );
@@ -73,11 +71,64 @@ const UserRow = ({ user, onSendRequest }) => {
 const SendRequestModal = ({ open, onClose , classData }) => {
     const [query, setQuery] = useState('');
     const [results, setResults] = useState([]);
+    const [sentRequests, setSentRequests] = useState([]);
     const [searching, setSearching] = useState(false);
     const [searched, setSearched] = useState(false);
-    const [activeTab, setActiveTab] = useState('search'); // sentRequest | search
+    const [activeTab, setActiveTab] = useState('search');
     const debounceRef = useRef(null);
 
+    const fetchSearchResults = async (q) => {
+        try {
+            const res = await api.get(`/class/search/students?query=${q}&cid=${classData._id}`);
+            const restructuredResults = res.data.map(student => ({
+                _id : student._id,
+                username: student.user.username,
+                pfpUrl: student.user.pfpUrl,
+            }));
+            setResults(restructuredResults);
+        } catch (err) {
+            console.error('Error fetching search results:', err);
+        }
+    };
+
+
+    const fetchSentRequests = async () => {
+        try{
+            const res = await api.get(`/class/joinrequests/${classData._id}`);
+            console.log(res.data);
+            const restructuredResults = res.data.map(_ => ({
+                _id: _._id,
+                username: _.user.username,
+                pfpUrl: _.user.pfpUrl,
+            }));
+            console.log(restructuredResults);
+            setSentRequests(restructuredResults);
+        }catch(err){
+            console.error('Error fetching sent requests:', err);
+        }
+    };
+
+
+    const handleSentRequest = (studentId) => {
+        setTimeout(() => {
+            setResults(prev => prev.filter(s => s._id !== studentId));
+        }, 2000);
+    }
+
+    const handleDenyRequest = async (studentId) => {
+        try{
+            await api.post(`/class/joinrequests/deny`, { cid: classData._id, sid: studentId } );
+            setSentRequests(prev => prev.filter(r => r._id !== studentId));
+        }catch(err){
+            console.error('Error denying join request:', err);
+        }
+    }
+
+    useEffect(() => {
+        if(activeTab === 'sentRequest'){
+            fetchSentRequests();
+        }
+    }, [activeTab]);
 
     useEffect(() => {
         if (!open) {
@@ -99,13 +150,10 @@ const SendRequestModal = ({ open, onClose , classData }) => {
 
         setSearching(true);
         debounceRef.current = setTimeout(() => {
-            const q = query.toLowerCase();
-            const matches = MOCK_USERS.filter(
-                u => u.username.toLowerCase().includes(q) || u.username.toLowerCase().includes(q)
-            );
-            setResults(matches);
+        fetchSearchResults(query.trim()).then(() => {
             setSearching(false);
             setSearched(true);
+        });
         }, 500);
 
         return () => clearTimeout(debounceRef.current);
@@ -141,7 +189,7 @@ const SendRequestModal = ({ open, onClose , classData }) => {
                         Add to Class
                     </h3>
                     <p className="text-xs m-0 mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
-                        Search and invite a student to join <span className="font-medium" style={{ color: 'var(--color-accent)' }}>{classData?.name || 'your class'}</span>
+                        Search and invite a student to join <span className="font-medium" style={{ color: 'var(--color-accent)' }}>{classData?.title || 'your class'}</span>
                     </p>
                 </div>
                 <button
@@ -209,8 +257,8 @@ const SendRequestModal = ({ open, onClose , classData }) => {
             <div style={{ maxHeight: 380, overflowY: 'auto' }}>
                 {results.length > 0 ? (
                     <div className="px-2 pb-3">
-                        {results.map(user => (
-                            <UserRow key={user._id} user={user} />
+                        {results.map(student => (
+                            <UserRow key={student._id} student={student} cid={classData._id} onSendRequest={handleSentRequest} />
                         ))}
                     </div>
                 ) : searched ? (
@@ -232,9 +280,48 @@ const SendRequestModal = ({ open, onClose , classData }) => {
             </div>}
 
             {activeTab === "sentRequest" && 
-                <div className="flex flex-col items-center py-12 gap-2">
-                    <p className="text-xs uppercase font-semibold mb-3" style={{ color: 'var(--color-text-muted)' }}>No sent requests yet</p>
-                </div>
+                (sentRequests.length > 0 ? (
+                    <div style={{ maxHeight: 380, overflowY: 'auto' }} className="px-2 pb-3">
+                        {sentRequests.map(request => (
+                            <div
+                                key={request._id}
+                                className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200"
+                                style={{ borderBottom: '1px solid var(--color-border)' }}
+                            >
+                                <Avatar
+                                    src={request.pfpUrl}
+                                    size={46}
+                                    icon={<UserOutlined />}
+                                    className="border-2"
+                                    style={{ borderColor: 'var(--color-border)' }}
+                                />
+                                <div className="flex-1 min-w-0">
+                                    <p className="font-semibold truncate text-sm" style={{ color: 'var(--color-text)' }}>
+                                        {request.username}
+                                    </p>
+                                </div>
+                                <div
+                                    className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200"
+                                    style={{ background: 'var(--color-success)', color: '#fff', opacity: 0.85 }}
+                                >
+                                    <CheckOutlined style={{ fontSize: 12 }} /> Sent
+                                </div>
+                                <button
+                                    onClick={() => handleDenyRequest(request._id)}
+                                    className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 cursor-pointer"
+                                    style={{ background: 'var(--color-error)', color: '#fff' }}
+                                >
+                                    <CloseOutlined style={{ fontSize: 12 }} /> Cancel
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                ) :
+                (
+                    <div className="flex flex-col items-center py-12 gap-2">
+                        <p className="text-xs uppercase font-semibold mb-3" style={{ color: 'var(--color-text-muted)' }}>No sent requests yet</p>
+                    </div>
+                ))
             }
         </Modal>
     );

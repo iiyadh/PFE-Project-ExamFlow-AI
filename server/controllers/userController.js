@@ -65,15 +65,16 @@ const linkWithGoogle = async (req, res) =>{
     try{
         const googleRes = await axios.get("https://www.googleapis.com/oauth2/v3/userinfo", {
             headers: { Authorization: `Bearer ${token}` },
+            timeout: 10000,
         });
         const { sub } = googleRes.data;
         let user = await User.findById(uid);
         let existingUser = await User.findOne({ googleId: sub });
-        
+
         if(existingUser && existingUser.id !== uid){
             return res.status(400).json({ message: 'Google account already linked to another user' });
         }
-        
+
         if(user.googleId && user.googleId !== sub){
             return res.status(400).json({ message: 'Google account already linked to another user' });
         }
@@ -82,6 +83,15 @@ const linkWithGoogle = async (req, res) =>{
         res.json({ message: 'Google account linked successfully' ,googleId : sub});
     }catch(err){
         console.log(err);
+        if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
+            return res.status(504).json({ message: 'Request timeout. Please try again.' });
+        }
+        if (err.response?.status === 429) {
+            return res.status(429).json({ message: 'Rate limit exceeded. Please try again later.' });
+        }
+        if (err.response?.status === 401) {
+            return res.status(401).json({ message: 'Invalid Google token' });
+        }
         res.status(500).json({ message: 'Server error' });
     }
 }

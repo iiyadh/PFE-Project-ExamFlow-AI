@@ -3,13 +3,18 @@ from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
+from openai import RateLimitError, APIError, APITimeoutError
+from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 
 load_dotenv()
 
 llm = ChatOpenAI(
     model="gpt-4o-mini",
     temperature=0.3,
-    api_key=os.getenv("OPENAI_API_KEY")
+    api_key=os.getenv("OPENAI_API_KEY"),
+    max_tokens=4096,
+    request_timeout=60,
+    max_retries=3
 )
 
 prompt = PromptTemplate.from_template("""
@@ -56,5 +61,22 @@ parser = StrOutputParser()
 chain = prompt | llm | parser
 
 
+@retry(
+    retry=retry_if_exception_type((RateLimitError, APITimeoutError, APIError)),
+    stop=stop_after_attempt(5),
+    wait=wait_exponential(multiplier=1, min=2, max=60)
+)
 def structure_content(text):
-    return chain.invoke({"content": text})
+    try:
+        if len(text) > 100000:
+            raise ValueError("Input text exceeds maximum context length. Please provide a smaller document.")
+
+        return chain.invoke({"content": text})
+    except RateLimitError as e:
+        raise Exception(f"OpenAI rate limit exceeded. Please try again later. Details: {str(e)}")
+    except APITimeoutError as e:
+        raise Exception(f"OpenAI API timeout. The request took too long. Details: {str(e)}")
+    except APIError as e:
+        raise Exception(f"OpenAI API error occurred. Details: {str(e)}")
+    except Exception as e:
+        raise Exception(f"Failed to structure content: {str(e)}")

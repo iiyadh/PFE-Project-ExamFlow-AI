@@ -74,6 +74,7 @@ const signWithGoogle = async (req, res) =>{
     try{
         const googleRes = await axios.get("https://www.googleapis.com/oauth2/v3/userinfo", {
             headers: { Authorization: `Bearer ${token}` },
+            timeout: 10000,
         });
         const { sub } = googleRes.data;
         let user = await User.findOne({ googleId : sub });
@@ -87,6 +88,15 @@ const signWithGoogle = async (req, res) =>{
         res.json({ message: 'Login with Google successful' , role : user.role});
     }catch(err){
         console.log(err);
+        if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
+            return res.status(504).json({ message: 'Request timeout. Please try again.' });
+        }
+        if (err.response?.status === 429) {
+            return res.status(429).json({ message: 'Rate limit exceeded. Please try again later.' });
+        }
+        if (err.response?.status === 401) {
+            return res.status(401).json({ message: 'Invalid Google token' });
+        }
         res.status(500).json({ message: 'Server error' });
     }
 }

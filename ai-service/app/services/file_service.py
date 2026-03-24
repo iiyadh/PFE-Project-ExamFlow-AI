@@ -4,6 +4,7 @@ import requests
 import os
 from pypdf import PdfReader
 import docx2txt
+from tenacity import retry, stop_after_attempt, wait_exponential
 
 
 def get_signed_url(public_id):
@@ -18,11 +19,21 @@ def get_signed_url(public_id):
     return url
 
 
+@retry(
+    stop=stop_after_attempt(3),
+    wait=wait_exponential(multiplier=1, min=2, max=10)
+)
 def download_file(url, filename):
-    response = requests.get(url)
+    try:
+        response = requests.get(url, timeout=30)
+        response.raise_for_status()
 
-    with open(filename, "wb") as f:
-        f.write(response.content)
+        with open(filename, "wb") as f:
+            f.write(response.content)
+    except requests.Timeout as e:
+        raise Exception(f"Timeout downloading file from URL. Details: {str(e)}")
+    except requests.RequestException as e:
+        raise Exception(f"Error downloading file: {str(e)}")
 
 
 def extract_text(file_path):

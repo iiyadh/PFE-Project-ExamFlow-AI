@@ -27,6 +27,7 @@ export const uploadToCloudinary = async (file, folderName, id) => {
     {
       method: "POST",
       body: data,
+      signal: AbortSignal.timeout(60000),
     }
   );
   return res.json();

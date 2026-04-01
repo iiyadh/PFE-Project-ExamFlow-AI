@@ -1,60 +1,107 @@
 import os
 from dotenv import load_dotenv
-from langchain_openai import ChatOpenAI
-from langchain_core.prompts import PromptTemplate
-from langchain_core.output_parsers import StrOutputParser
 
 load_dotenv()
 
-llm = ChatOpenAI(
-    model="gpt-4o-mini",
-    temperature=0.3,
-    api_key=os.getenv("OPENAI_API_KEY")
+from langchain_groq import ChatGroq
+from langchain_core.prompts import PromptTemplate
+from langchain_core.output_parsers import JsonOutputParser
+
+llm = ChatGroq(
+    api_key=os.getenv("GROQ_API_KEY"),
+    model=os.getenv("GROQ_MODEL", "openai/gpt-oss-120b"),
+    temperature=0,
 )
+parser = JsonOutputParser()
 
-prompt = PromptTemplate.from_template("""
-You are an AI that structures educational content into a course format.
+# ─── Prompt 1: Course metadata only ────────────────────────────────────────────
 
-Convert the content below into a valid JSON object that strictly follows this structure:
+_course_meta_prompt = PromptTemplate.from_template("""
+Analyze this educational content and extract metadata.
+Return a JSON object with: title, description (1 sentence max), level (Beginner/Intermediate/Advanced), and image (CSS gradient).
 
+Example JSON format:
 {{
-  "title": "Course Title",
-  "description": "A brief course description",
-  "level": "Beginner" | "Intermediate" | "Advanced",
-  "image": "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-  "markdownContent": [
-    {{
-      "title": "Section or Module Title",
-      "content": "Full markdown content for this section including lessons, bullet points, explanations, etc."
-    }}
-  ]
+  "title": "Course Name",
+  "description": "What this teaches",
+  "level": "Beginner",
+  "image": "linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
 }}
 
-Rules:
-- "title": a concise course title
-- "description": a 1-2 sentence summary of the entire course
-- "level": must be exactly one of "Beginner", "Intermediate", or "Advanced" — infer from the content complexity
-- "image": a CSS linear-gradient string. Choose colors that visually match the course topic/mood.
-    Format must be exactly: "linear-gradient(135deg, #RRGGBB 0%, #RRGGBB 100%)"
-    Examples:
-      - Python/AI topics:     "linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
-      - Web development:      "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)"
-      - Data/Analytics:       "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)"
-      - Security/Systems:     "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)"
-      - Mobile/Design:        "linear-gradient(135deg, #fa709a 0%, #fee140 100%)"
-- "markdownContent": an array of sections/modules. Each item must have:
-    - "title": the section title (e.g. "Module 1: Introduction")
-    - "content": rich Markdown content for that section (lessons, bullet points, code blocks, summaries, etc.)
-- Return ONLY the JSON object. No extra text, no markdown fences.
+Content to analyze:
+{content}
+""")
+
+_course_meta_chain = _course_meta_prompt | llm | parser
+
+
+# ─── Prompt 2: Plan course sections (4–7) from full text ─────────────────────
+
+_section_plan_prompt = PromptTemplate.from_template("""
+Plan course sections from this content. Return a JSON array with 4-7 modules.
+Each module: {{"title": "Module N: Name", "summary": "One sentence about this module"}}
+
+Course: {course_title}
 
 Content:
 {content}
 """)
 
-parser = StrOutputParser()
+_section_plan_chain = _section_plan_prompt | llm | parser
 
-chain = prompt | llm | parser
+# ─── Prompt 3: Generate full markdown for one planned section ────────────────
+
+_section_content_prompt = PromptTemplate.from_template("""
+Write section {section_index} markdown for course "{course_title}".
+Section: {section_title}
+
+Return a JSON object: {{"title": "{section_title}", "content": "Detailed Markdown here"}}
+
+Source content:
+{content}
+""")
+
+_section_content_chain = _section_content_prompt | llm | parser
 
 
-def structure_content(text):
-    return chain.invoke({"content": text})
+# ─── Public API ─────────────────────────────────────────────────────────────────
+
+def generate_course_meta(full_text: str) -> dict:
+    """"""
+    try:
+        return _course_meta_chain.invoke({"content": full_text})
+    except Exception as e:
+        print(f"Error generating course metadata: {e}")
+        return {
+            "title": "Untitled Course",
+            "description": "No description available.",
+            "level": "Beginner",
+            "image": "linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
+        }
+
+
+def generate_section_plan(full_text: str, course_title: str) -> list[dict]:
+    """
+    Plan course sections with minimal token usage.
+    """
+    try:
+        return _section_plan_chain.invoke({"content": full_text, "course_title": course_title})
+    except Exception as e:
+        print(f"Error generating section plan: {e}")
+        return []
+
+
+def generate_section_content(full_text: str, course_title: str, section: dict, section_index: int) -> dict:
+    """
+    Generate section content with minimal token usage.
+    """
+    try:
+        return _section_content_chain.invoke({
+            "content": full_text,
+            "course_title": course_title,
+            "section_title": section.get("title", f"Section {section_index}"),
+        })
+    except Exception as e:
+        print(f"Error generating content for section '{section.get('title', '')}': {e}")
+        return {"title": section.get("title", f"Section {section_index}"), "content": "Content generation failed."}
+    

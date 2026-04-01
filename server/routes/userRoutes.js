@@ -10,7 +10,7 @@ router.post('/verify-otp', verifyToken, authorizeRoles('admin',"user") , verifyO
 router.get('/all', verifyToken, authorizeRoles('admin') , fetchUsers);
 router.put('/toggle-block/:id', verifyToken, authorizeRoles('admin'), toggleBlockUser);
 router.put('/change-password', verifyToken, authorizeRoles('admin', 'user'), changePassword);
-router.put('/edit-profile', verifyToken, authorizeRoles('admin', 'user'), editProfile);
+router.put('/edit-profile', verifyToken, authorizeRoles('admin', 'user', "teacher" , "student"), editProfile);
 router.delete('/:id', verifyToken, authorizeRoles('admin'), deleteUser);
 router.put('/setrole', verifyToken, authorizeRoles('user'), setRoleUser);
 

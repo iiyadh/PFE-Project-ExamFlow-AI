@@ -17,7 +17,6 @@ import {
   DeleteOutlined,
 } from '@ant-design/icons';
 import { useState, useEffect } from 'react';
-import { uploadToCloudinary } from '../lib/cloudinary';
 import api from '../lib/api';
 
 
@@ -116,57 +115,49 @@ const DriveFilesModal = ({ open, onClose, classData }) => {
     );
   };
 
-  // Simulate POST /drive/import  →  triggers FastAPI conversion
-  const handleConvert = (file) => {
+  const handleConvert = async (file) => {
     setConverting(file._id);
-      setFiles((prev) =>
-        prev.map((f) => (f._id === file._id ? { ...f, status: 'processing' } : f))
-      );
-      setFiltered((prev) =>
-        prev.map((f) => (f._id === file._id ? { ...f, status: 'processing' } : f))
-      );
+    const updateStatus = (status) => {
+      setFiles((prev) => prev.map((f) => (f._id === file._id ? { ...f, status } : f)));
+      setFiltered((prev) => prev.map((f) => (f._id === file._id ? { ...f, status } : f)));
+    };
+    updateStatus('processing');
+    try {
+      await api.post(`/file/convert/${file._id}`, { classId: classData._id });
+      updateStatus('converted');
+    } catch {
+      updateStatus('failed');
+    } finally {
       setConverting(null);
-      // Simulate conversion completing after 3s
-      setTimeout(() => {
-        setFiles((prev) =>
-          prev.map((f) => (f._id === file._id ? { ...f, status: 'converted' } : f))
-        );
-        setFiltered((prev) =>
-          prev.map((f) => (f._id === file._id ? { ...f, status: 'converted' } : f))
-        );
-      }, 3000);
+    }
   };
 
 
 
   const handleUpload = async (file) => {
-    try{
+    try {
       setUploading(true);
-      const res = await uploadToCloudinary(file, `class_${classData._id}`, file.uid);
-      console.log(res);
-      if(res.secure_url){
-        const newFile = {
-          name: file.name,
-          mimeType: file.type,
-          modifiedTime: new Date().toISOString(),
-          size: `${(file.size / (1024 * 1024)).toFixed(2)} MB`,
-          status: 'pending',
-          webViewLink: res.secure_url,
-          public_id: res.public_id,
-        };
-        const saveRes = await api.post(`/file/${classData._id}`, newFile);
-        const savedFile = saveRes.data;
-        setFiles((prev) => [...prev, savedFile]);
-        setFiltered((prev) => [...prev, savedFile]);
-      } else {
-        console.error('Cloudinary upload did not return a secure URL:', res);
-      }
-    }catch(err){
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('name', file.name);
+      formData.append('mimeType', file.type);
+      formData.append('modifiedTime', new Date().toISOString());
+      formData.append('size', `${(file.size / (1024 * 1024)).toFixed(2)} MB`);
+
+      const saveRes = await api.post(`/file/${classData._id}`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      const savedFile = saveRes.data;
+      setFiles((prev) => [...prev, savedFile]);
+      setFiltered((prev) => [...prev, savedFile]);
+    } catch (err) {
       console.error('Upload failed:', err);
-    }finally{
+    } finally {
       setUploading(false);
     }
   };
+
+
 
   const handleDelete = async (file) => {
     try{

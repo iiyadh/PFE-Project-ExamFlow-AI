@@ -1,0 +1,51 @@
+services:
+  mongodb:
+    image: mongo:7
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    restart: always
+
+  server:
+    build: ./server
+    container_name: express-server
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./server:/app
+      - /app/node_modules
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017/appdb
+      - AI_SERVICE_URL=http://ai-service:8000
+    depends_on:
+      - mongodb
+    command: npm start
+
+  ai-service:
+    build: ./ai-service
+    container_name: fastapi-ai
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./ai-service:/app
+      - ./ai-service/app/chroma_db:/app/chroma_db
+    depends_on:
+      - server
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  client:
+    build: ./client
+    container_name: react-client
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./client:/app
+      - /app/node_modules
+    depends_on:
+      - server
+    command: npm run dev -- --host
+
+volumes:
+  mongo_data:

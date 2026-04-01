@@ -52,8 +52,8 @@ export const useAuthStore = create(persist((set) => ({
     
     checkAuth: async () => {
         try {
-            console.log("reached");
             const res = await api.get('/auth/checkAuth');
+            console.log(res.data);
             set({ isAuthenticated: res.data.isAuthenticated });
             set({ role: res.data.role });
             return res;

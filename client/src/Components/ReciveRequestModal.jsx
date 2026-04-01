@@ -127,7 +127,7 @@ const ReciveRequestModal = ({ open, onClose , onRefresh }) => {
 
     useEffect(() => {
         fetchRequests();
-    }, [fetchRequests]);
+    }, [open]);
 
     return (
         <Modal

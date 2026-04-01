@@ -16,6 +16,7 @@ const RequireAuth = ({ children }) => {
     const runCheck = async () => {
       try {
         const res = await checkAuth();
+        console.log(res.data);
         setResult(res.data);
       } finally {
         setLoading(false);
@@ -56,12 +57,17 @@ const RequireAuth = ({ children }) => {
       return <Navigate to="/login" replace />;
     }
 
-    if ( result && result.status && result.status === 'BANNED') {
-      return <Navigate to="/banned" replace />;
-    }
-
-    if (result && result.status && result.status === 'INACTIVE') {
-      return <Navigate to="/suspended" replace />;
+    if ( result && result.status && result.status === 'suspended') {
+      return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-bg">
+        <div className="flex flex-col items-center space-y-6">
+          <h1 className="text-2xl font-bold text-error">Account Suspended</h1>
+          <p className="text-center text-text-secondary">Your account has been suspended. Please contact support for more information.</p>
+          <Logo />
+          <a href="/" className="inline-block px-4 py-2 bg-primary text-white rounded hover:bg-primary-dark transition-colors">Go back Home</a>
+        </div>
+      </div>
+      )
     }
 
     return children;

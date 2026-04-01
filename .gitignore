@@ -1,0 +1,91 @@
+# ----------------------------
+# Environment variables
+# ----------------------------
+.env
+.env.*
+*.env
+
+# ----------------------------
+# Node.js
+# ----------------------------
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+dist/
+build/
+.next/
+out/
+
+# Vite
+.vite/
+
+# ----------------------------
+# Python
+# ----------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# Python packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# ----------------------------
+# Logs
+# ----------------------------
+logs/
+*.log
+
+# ----------------------------
+# OS files
+# ----------------------------
+.DS_Store
+Thumbs.db
+
+# ----------------------------
+# IDEs / Editors
+# ----------------------------
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ----------------------------
+# Docker
+# ----------------------------
+docker-data/
+*.tar
+
+# ----------------------------
+# MongoDB local data
+# ----------------------------
+mongo-data/
+data/db/
+
+# ----------------------------
+# Coverage / Testing
+# ----------------------------
+coverage/
+.pytest_cache/
+.cache/
+
+# ----------------------------
+# Temporary files
+# ----------------------------
+tmp/
+temp/
+
+# ----------------------------
+# Build artifacts
+# ----------------------------
+*.tsbuildinfo

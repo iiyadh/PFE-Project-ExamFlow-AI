@@ -8,6 +8,18 @@ const fs = require('fs');
 
 const AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'http://localhost:8000';
 
+
+const backgrounds = [
+    'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    'linear-gradient(135deg, #f6d365 0%, #fda085 100%)',
+    'linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%)',
+    'linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)',
+    'linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%)',
+    'linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%)',
+    'linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%)',
+    'linear-gradient(135deg, #cfd9df 0%, #e2ebf0 100%)',
+];
+
 const uploadFile = async (req,res) =>{
     try{
         const { classId } = req.params;
@@ -61,27 +73,39 @@ const convertFileToCourse = async (req,res) =>{
         if(!fileData){
             return res.status(404).json({ message: 'File not found' });
         }
-        const response = await axios.post(`${AI_SERVICE_URL}/convert/`, { source: fileData.public_id });
-        const courseData = response.data;
-        console.log(courseData);
-        return res.status(200).json(courseData);
+        // const response = await axios.post(`${AI_SERVICE_URL}/convert/`, { source: fileData.public_id });
+        const courseData = {
+            title: `Course from ${fileData.name}`,
+            description: `Converted from file ${fileData.name}`,
+            level: 'Beginner',
+            image: backgrounds[Math.floor(Math.random() * backgrounds.length)],
+            markdownContent: [
+                {
+                    title: 'Introduction',
+                    content: `This course was generated from the file ${fileData.name}.`
+                },
+                {
+                    title: 'Content',
+                    content: `The original file had a size of ${fileData.size} and was last modified on ${fileData.modifiedTime}.`
+                }
+            ]
+        };
         // Save each MarkdownContent document and collect their IDs
-        const markdownIds = [];
-        for (const item of courseData.markdownContent){
-            const md = await new MarkdownContent({
-                title: item.title,
-                content: item.content,
-            }).save();
-            markdownIds.push(md._id);
+        const markdownContentIds = [];
+        for(const md of courseData.markdownContent){
+            const newMd = new MarkdownContent(md);
+            const savedMd = await newMd.save();
+            markdownContentIds.push(savedMd._id);
         }
-
+        // Create the Course document with references to the MarkdownContent documents
         const newCourse = new Course({
             title: courseData.title,
             description: courseData.description,
             level: courseData.level,
             image: courseData.image,
-            markdownContent: markdownIds,
+            markdownContent: markdownContentIds,
         });
+        
         const savedCourse = await newCourse.save();
 
         // Update file status and link to course

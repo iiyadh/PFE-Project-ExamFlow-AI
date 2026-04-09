@@ -22,6 +22,9 @@ app.use('/api/user', require('./routes/userRoutes'));
 app.use('/api/class', require('./routes/classRoutes'));
 app.use('/api/file', require('./routes/fileRoutes'));
 app.use('/api/student', require('./routes/studentRoutes'));
+app.use('/api/course', require('./routes/coursRoutes'));
+app.use('/api/markdown', require('./routes/markdownRoutes'));
+app.use('/api/progress', require('./routes/progressRoutes'));
 
 
 

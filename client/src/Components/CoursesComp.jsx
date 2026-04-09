@@ -1,84 +1,19 @@
-import { Card, Row, Col, Progress, Tag, message , Input } from 'antd';
+import { Card, Row, Col, Progress, Tag, message , Input ,Button, Modal, Form, Select } from 'antd';
 import { RightOutlined } from '@ant-design/icons';
 import { BookOpen } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams , useNavigate} from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
-
-const mockCourses = [
-  {
-    id: '1',
-    title: 'React Advanced Patterns',
-    description:
-      'Master advanced React patterns including custom hooks, render props, compound components, and performance optimization techniques. Perfect for intermediate developers looking to level up.',
-
-    progress: 100,
-    status: 'Completed',
-    image: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-    level: 'Advanced',
-  },
-  {
-    id: '2',
-    title: 'Web Design Fundamentals',
-    description:
-      'Learn the principles of modern web design including layout, typography, color theory, and user experience. Create beautiful interfaces that users love with practical design exercises.',
-
-    progress: 45,
-    status: 'In Progress',
-    image: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-    level: 'Beginner',
-  },
-  {
-    id: '3',
-    title: 'Node.js & Express Mastery',
-    description:
-      'Build scalable backend applications with Node.js and Express. Cover RESTful APIs, database integration, authentication, and deployment strategies for production applications.',
-
-    progress: 60,
-    status: 'In Progress',
-    image: 'linear-gradient(135deg, #1a237e 0%, #00897b 100%)',
-    level: 'Intermediate',
-  },
-  {
-    id: '4',
-    title: 'Python Data Science',
-    description:
-      'Dive into data analysis and visualization using Python. Learn pandas, numpy, matplotlib, and machine learning basics. Perfect for aspiring data scientists and analysts.',
-
-    progress: 30,
-    status: 'In Progress',
-    image: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
-    level: 'Intermediate',
-  },
-  {
-    id: '5',
-    title: 'AWS Cloud Architecture',
-    description:
-      'Master AWS services for building cloud-native applications. Learn about EC2, S3, Lambda, RDS, and serverless architecture. Essential for modern backend development.',
-
-    progress: 0,
-    status: 'Not Started',
-    image: 'linear-gradient(135deg, #ff6b6b 0%, #4ecdc4 100%)',
-    level: 'Advanced',
-  },
-  {
-    id: '6',
-    title: 'Mobile App Development',
-    description:
-      'Create cross-platform mobile applications using React Native. Learn navigation, state management, and native modules. Deploy your apps to iOS and Android.',
-
-    progress: 55,
-    status: 'In Progress',
-    image: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
-    level: 'Intermediate',
-  },
-];
+import api from '../lib/api';
 
 const CoursesComp = () => {
-  const [CoursesData, setCoursesData] = useState(mockCourses);
+  const [CoursesData, setCoursesData] = useState([]);
   const [filteredCourses, setFilteredCourses] = useState(CoursesData);
+  const [editingCourse, setEditingCourse] = useState(null);
+  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [messageApi, contextHolder] = message.useMessage();
   const [searchTerm, setSearchTerm] = useState('');
+  const [form] = Form.useForm();
   const { cid } = useParams();
   const navigate = useNavigate();
   const { role } = useAuthStore();
@@ -108,6 +43,95 @@ const CoursesComp = () => {
     return colorMap[level] || 'default';
   };
 
+
+  const fetchCourses = async () => {
+    try {
+      const response = await api.get(`/course/${cid}`);
+      const fetchedCourses = Array.isArray(response.data) ? response.data : [];
+
+      if (role === 'student' && fetchedCourses.length > 0) {
+        const coursesWithProgress = await Promise.all(
+          fetchedCourses.map(async (course) => {
+            try {
+              const progressResponse = await api.get(`/progress/${course._id}`);
+              return {
+                ...course,
+                progress: progressResponse.data?.progress ?? 0,
+                status: progressResponse.data?.status ?? 'Not Started',
+              };
+            } catch (progressError) {
+              console.error(`Error fetching progress for course ${course._id}:`, progressError);
+              return {
+                ...course,
+                progress: 0,
+                status: 'Not Started',
+              };
+            }
+          })
+        );
+
+        setCoursesData(coursesWithProgress);
+        setFilteredCourses(coursesWithProgress);
+      } else {
+        setCoursesData(fetchedCourses);
+        setFilteredCourses(fetchedCourses);
+      }
+    } catch (error) {
+      console.error('Error fetching courses:', error);
+      messageApi.error('Failed to fetch courses. Please try again later.');
+    }
+  };
+
+  const savEeditCourse = async (courseId, updatedData) => {
+    try {
+      const response = await api.put(`/course/${courseId}`, updatedData);
+      const updatedCourse = response.data;
+      setCoursesData(prevCourses =>
+        prevCourses.map(course => (course.id === courseId ? updatedCourse : course))
+      );
+      setFilteredCourses(prevCourses =>
+        prevCourses.map(course => (course.id === courseId ? updatedCourse : course))
+      );
+      messageApi.success('Course updated successfully!');
+      setIsEditModalVisible(false);
+      form.resetFields();
+    }
+      catch (error) {
+        console.error('Error editing course:', error);
+        messageApi.error('Failed to edit course. Please try again later.');
+      }
+  };
+
+  const EditCourse = (course) => {
+    setEditingCourse(course);
+    form.setFieldsValue({
+      title: course.title,
+      description: course.description,
+      level: course.level,
+    });
+    setIsEditModalVisible(true);
+  };
+
+  const handleEditSubmit = async () => {
+    try {
+      const values = await form.validateFields();
+      await savEeditCourse(editingCourse.id, values);
+    } catch (error) {
+      console.error('Validation failed:', error);
+    }
+  };
+
+  const handleEditCancel = () => {
+    setIsEditModalVisible(false);
+    form.resetFields();
+    setEditingCourse(null);
+  };
+
+  useEffect(() => {
+    fetchCourses();
+  }, [cid, role]);
+
+
   return (
     <>
       {contextHolder}
@@ -131,7 +155,7 @@ const CoursesComp = () => {
           {/* Course Grid */}
           <Row gutter={[24, 24]}>
             {filteredCourses.map((course) => (
-              <Col key={course.id} xs={24} sm={24} md={12} lg={8}>
+              <Col key={course._id} xs={24} sm={24} md={12} lg={8}>
                 <Card
                   hoverable
                   className="rounded-2xl overflow-hidden h-full flex flex-col shadow-lg hover:shadow-xl transition-shadow duration-300 bg-surface border-border"
@@ -143,7 +167,7 @@ const CoursesComp = () => {
                     >
                     </div>
                   }
-                  onClick={()=>navigate(`/${role}/modules/${course.id}`)}
+                  onClick={()=>navigate(`/${role}/modules/${course._id}`)}
                 >
                   {/* Title */}
                   <h3 className="text-lg font-semibold mb-3 text-text">
@@ -161,6 +185,7 @@ const CoursesComp = () => {
                   </p>
 
                   {/* Progress Section */}
+                  {role == 'student' && 
                   <div className="mt-auto">
                     {/* Status */}
                     <div className="flex justify-between items-center mb-3">
@@ -191,7 +216,23 @@ const CoursesComp = () => {
                         size="small"
                       />
                     </div>
-                  </div>
+                  </div>}
+
+                  {role == 'teacher' &&
+                    <div className="mt-auto">
+                      <Button
+                        type="primary"
+                        className="w-full"
+                        icon={<RightOutlined />}
+                        onClick={(e)=>{
+                          e.stopPropagation();
+                          EditCourse(course);
+                        }}
+                        >
+                        Edit Course
+                      </Button>
+                    </div>
+                  }
                 </Card>
               </Col>
             ))}
@@ -222,6 +263,54 @@ const CoursesComp = () => {
           </Row>
         </div>
       </main>
+
+      {/* Edit Course Modal */}
+      <Modal
+        title="Edit Course"
+        open={isEditModalVisible}
+        onOk={handleEditSubmit}
+        onCancel={handleEditCancel}
+        okText="Save Changes"
+        cancelText="Cancel"
+        width={600}
+      >
+        <Form
+          form={form}
+          layout="vertical"
+          className="mt-4"
+        >
+          <Form.Item
+            label="Course Title"
+            name="title"
+            rules={[{ required: true, message: 'Please enter course title' }]}
+          >
+            <Input placeholder="Enter course title" />
+          </Form.Item>
+
+          <Form.Item
+            label="Description"
+            name="description"
+            rules={[{ required: true, message: 'Please enter course description' }]}
+          >
+            <Input.TextArea 
+              rows={4} 
+              placeholder="Enter course description" 
+            />
+          </Form.Item>
+
+          <Form.Item
+            label="Level"
+            name="level"
+            rules={[{ required: true, message: 'Please select course level' }]}
+          >
+            <Select placeholder="Select course level">
+              <Select.Option value="Beginner">Beginner</Select.Option>
+              <Select.Option value="Intermediate">Intermediate</Select.Option>
+              <Select.Option value="Advanced">Advanced</Select.Option>
+            </Select>
+          </Form.Item>
+        </Form>
+      </Modal>
     </>
   );
 }

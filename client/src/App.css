@@ -891,3 +891,28 @@
 *::-webkit-scrollbar-corner {
   background: transparent;
 }
+
+.ant-select{
+  background-color: var(--color-surface) !important;
+  border-color: var(--color-border) !important;
+  color: var(--color-text) !important;
+}
+
+
+.ant-select-content {
+  background-color: var(--color-surface) !important;
+  border-color: var(--color-border) !important;
+  color: var(--color-text) !important;
+}
+
+
+.ant-select-dropdown {
+  background-color: var(--color-surface) !important;
+  border-color: var(--color-border) !important;
+  color: var(--color-text) !important;
+}
+
+.ant-select-item-option {
+  background-color: var(--color-surface) !important;
+  color: var(--color-text) !important;
+}

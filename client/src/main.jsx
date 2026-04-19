@@ -24,6 +24,10 @@ import ClassComp from './Components/ClassComp.jsx';
 import ModuleViewer from './Components/Moduleviewer.jsx';
 import UserPage from './Pages/UserPage.jsx';
 import UserOrientationComp from './Components/UserOrientationComp.jsx';
+import GenerateQuestions from './Components/GenerateQuestions.jsx';
+import GeneratedPreview from './Components/GeneratedPreview.jsx';
+import GenerationProgress from './Components/GenerationProgress.jsx';
+import QuestionBankPage from './Pages/QuestionBankPage.jsx';
 
 
 const router = createBrowserRouter([
@@ -44,14 +48,18 @@ const router = createBrowserRouter([
         { index: true, element: <Navigate to="/student/classes" replace />},
         { path: 'classes', element: <ClassComp />},
         { path: 'courses/:cid', element: <CoursesComp />},
-        { path: 'modules/:cid', element: <ModuleViewer />}
+        { path: 'modules/:cid', element: <ModuleViewer />},
       ]},
       { path: '/teacher', element: <RequireAuth><RequireRole allowedRoles={['teacher', 'admin']}><TeacherPage /></RequireRole></RequireAuth>,
       children:[
         { index: true, element: <Navigate to="/teacher/classes" replace />},
         { path: 'classes', element: <ClassComp />},
         { path: 'courses/:cid', element: <CoursesComp />},
-        { path: 'modules/:cid', element: <ModuleViewer />}
+        { path: 'modules/:cid', element: <ModuleViewer />},
+        { path: 'genques/:classId?', element: <GenerateQuestions />},
+        { path: 'genprogress', element: <GenerationProgress />},
+        { path: 'genpreview', element: <GeneratedPreview />},
+        { path: 'question-bank/:classId', element: <QuestionBankPage />},
       ]
     },
       { path: '/home' , element: <RequireAuth><RequireRole allowedRoles={['user' , 'admin']}><UserPage /></RequireRole></RequireAuth> ,

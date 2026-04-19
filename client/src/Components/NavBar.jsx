@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Avatar, Button, Dropdown } from 'antd';
-import { 
-    User, 
-    LogOut, 
+import {
+    User,
+    LogOut,
     GraduationCap,
     BookOpen,
     Bell,
@@ -149,7 +149,7 @@ const NavBar = ({ role, setOpen ,setProfileOpen }) => {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-20">
 
-                        {/* Left section - Logo and Menu Toggle */}
+                        {/* Left section - Logo */}
                         <div className="flex items-center gap-4">
                             <Link to="/" className="flex items-center gap-3 group">
                                 <div className="relative">
@@ -170,6 +170,19 @@ const NavBar = ({ role, setOpen ,setProfileOpen }) => {
                                 </span>
                             </div>
                         </div>
+
+                        {/* Hamburger menu for mobile */}
+                        <button
+                            className="lg:hidden flex items-center justify-center w-10 h-10 rounded-xl border border-border text-text-muted hover:bg-surface-alt transition-colors"
+                            onClick={() => setMobileMenuOpen((v) => !v)}
+                            aria-label="Toggle menu"
+                        >
+                            <div className="flex flex-col gap-1">
+                                <span className={`block w-5 h-0.5 bg-current transition-all ${mobileMenuOpen ? "rotate-45 translate-y-1.5" : ""}`} />
+                                <span className={`block w-5 h-0.5 bg-current transition-all ${mobileMenuOpen ? "opacity-0" : ""}`} />
+                                <span className={`block w-5 h-0.5 bg-current transition-all ${mobileMenuOpen ? "-rotate-45 -translate-y-1.5" : ""}`} />
+                            </div>
+                        </button>
 
                         {/* Right section - User menu and actions */}
                         <div className="flex items-center gap-3">

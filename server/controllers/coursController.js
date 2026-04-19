@@ -1,12 +1,17 @@
+const Class = require('../models/Class');
 const Course = require('../models/Course');
-const MarkdownContent = require('../models/MarkdownContent');
 
 
 const fetchCourses = async (req,res) =>{
     try{
         const {cid} = req.params;
-        const courses = await Course.find();
-        res.status(200).json(courses);
+        const classData = await Class.findById(cid).populate('courses');
+
+        if (!classData) {
+            return res.status(404).json({ message: 'Class not found' });
+        }
+
+        res.status(200).json(classData.courses || []);
     }catch(err){
         console.error('Error fetching courses:', err);
         res.status(500).json({ message: 'Error fetching courses', error: err.message });

@@ -1,5 +1,5 @@
 import { Avatar, Button, Input ,Dropdown, Tooltip} from 'antd';
-import { FolderOutlined, EllipsisOutlined, PlusOutlined ,EditOutlined  ,DeleteOutlined, UsergroupAddOutlined } from '@ant-design/icons';
+import { FolderOutlined, EllipsisOutlined, PlusOutlined ,EditOutlined  ,DeleteOutlined, UsergroupAddOutlined ,HddOutlined } from '@ant-design/icons';
 import { useState, useEffect } from 'react';
 import ClassModal from './ClassModal';
 import DriveFilesModal from "../Components/DriveFilesModal";
@@ -138,6 +138,13 @@ const ClassComp = () => {
   return (
     <div className="bg-bg p-8">
         <div className="max-w-7xl mx-auto">
+        <nav className="text-sm text-text my-3" aria-label="Breadcrumb">
+          <ol className="list-none p-0 inline-flex items-center space-x-2">
+            <li className="text-primary font-medium">
+              Classes
+            </li>
+          </ol>
+        </nav>
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
                     <div className="w-full md:w-auto">
                         <h1 className="w-75 text-2xl sm:text-3xl font-bold text-text mb-2">My Classes</h1>
@@ -179,7 +186,7 @@ const ClassComp = () => {
                     <div
                         key={clas._id}
                         className="bg-surface rounded-lg shadow-sm hover:shadow-md hover:scale-105 hover:cursor-pointer transition-all duration-300 overflow-hidden border border-border"
-                        onClick={()=>navigate(`/${role}/courses/${clas._id}`)}
+                        onClick={()=>navigate(`/${role}/courses/${clas._id}`, { state: { className: clas.title } })}
                     >
                         {/* Card Header */}
                         <div className={`${clas.color} p-6 relative min-h-40 flex items-start justify-between`}>
@@ -258,6 +265,12 @@ const ClassComp = () => {
                               label: 'Edit Class',
                               icon: <EditOutlined />,
                               onClick: () => { setModalMode('edit'); setSelectedClass(clas); setModalOpen(true) }
+                            },
+                            {
+                              key: '4',
+                              label: 'Exercices',
+                              icon: <HddOutlined  />,
+                              onClick: () => { navigate(`/teacher/question-bank/${clas._id}`, { state: { className: clas.title } }) }
                             },
                             {
                               key: '3',

@@ -2,7 +2,7 @@ import { Card, Row, Col, Progress, Tag, message , Input ,Button, Modal, Form, Se
 import { RightOutlined } from '@ant-design/icons';
 import { BookOpen } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { useParams , useNavigate} from 'react-router-dom';
+import { useParams , useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import api from '../lib/api';
 
@@ -16,7 +16,9 @@ const CoursesComp = () => {
   const [form] = Form.useForm();
   const { cid } = useParams();
   const navigate = useNavigate();
+  const { state: locationState } = useLocation();
   const { role } = useAuthStore();
+  const className = locationState?.className;
 
 
 
@@ -87,10 +89,10 @@ const CoursesComp = () => {
       const response = await api.put(`/course/${courseId}`, updatedData);
       const updatedCourse = response.data;
       setCoursesData(prevCourses =>
-        prevCourses.map(course => (course.id === courseId ? updatedCourse : course))
+        prevCourses.map(course => (course._id === courseId ? updatedCourse : course))
       );
       setFilteredCourses(prevCourses =>
-        prevCourses.map(course => (course.id === courseId ? updatedCourse : course))
+        prevCourses.map(course => (course._id === courseId ? updatedCourse : course))
       );
       messageApi.success('Course updated successfully!');
       setIsEditModalVisible(false);
@@ -115,7 +117,7 @@ const CoursesComp = () => {
   const handleEditSubmit = async () => {
     try {
       const values = await form.validateFields();
-      await savEeditCourse(editingCourse.id, values);
+      await savEeditCourse(editingCourse._id, values);
     } catch (error) {
       console.error('Validation failed:', error);
     }
@@ -137,6 +139,34 @@ const CoursesComp = () => {
       {contextHolder}
       <main className="min-h-screen bg-bg py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
+          <nav className="text-sm my-3" aria-label="Breadcrumb">
+            <ol className="list-none p-0 inline-flex items-center gap-1.5">
+              <li>
+                <Link
+                  to={`/${role}/classes`}
+                  className="text-text-secondary hover:text-primary font-medium transition-colors duration-150"
+                >
+                  Classes
+                </Link>
+              </li>
+              <li>
+                <RightOutlined className="text-text-muted!" style={{ fontSize: 10 }} />
+              </li>
+              {className && (
+                <>
+                  <li>
+                    <span className="text-text-secondary font-medium">{className}</span>
+                  </li>
+                  <li>
+                    <RightOutlined className="text-text-muted!" style={{ fontSize: 10 }} />
+                  </li>
+                </>
+              )}
+              <li className="text-primary font-medium">
+                Courses
+              </li>
+            </ol>
+          </nav>
           {/* Header */}
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
                 <div className="w-full md:w-auto">

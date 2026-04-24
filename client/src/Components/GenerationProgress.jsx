@@ -3,23 +3,23 @@ import { CheckCircleFilled, CloseOutlined } from "@ant-design/icons";
 import { useLocation, useNavigate } from "react-router-dom";
 
 const STEPS = [
-  { id: 1, label: "Chapter content analyzed" },
-  { id: 2, label: "Generating question stems" },
-  { id: 3, label: "Adding MCQ answer options" },
-  { id: 4, label: "Tagging difficulty & topics" },
+  { id: 1, label: "Context retrieved" },
+  { id: 2, label: "Content processed" },
+  { id: 3, label: "Output generated" },
+  { id: 4, label: "Results finalized" },
 ];
 
 const STEP_LABELS = [
-  "Analyzing chapter content…",
-  "Generating question stems…",
-  "Adding MCQ answer options…",
-  "Tagging difficulty & topics…",
+  "Retrieving context…",
+  "Processing content…",
+  "Generating output…",
+  "Finalizing results…",
 ];
 
-const STREAMED_QUESTIONS = [
-  "What is the primary pigment responsible for capturing light energy during photosynthesis?",
-  "Which stage of photosynthesis directly produces ATP and NADPH?",
-  "In the Calvin cycle, how many CO₂ molecules are needed to produce one molecule of G3P",
+const STREAM_LINES = [
+  "Retrieving course material and chapter metadata…",
+  "Parsing document structure and key concepts…",
+  "Building AI context from retrieved content…",
 ];
 
 const  GenerationProgress = ({ chapter = "Chapter 4 — Photosynthesis", count = 10, type = "MCQs", onCancel }) =>{
@@ -30,7 +30,7 @@ const  GenerationProgress = ({ chapter = "Chapter 4 — Photosynthesis", count =
   const activeType = state?.type || type;
   const [progress, setProgress] = useState(0);
   const [activeStep, setActiveStep] = useState(1);
-  const [visibleQuestions, setVisibleQuestions] = useState([]);
+  const [visibleLines, setVisibleLines] = useState([]);
 
   useEffect(() => {
     const iv = setInterval(() => {
@@ -46,8 +46,8 @@ const  GenerationProgress = ({ chapter = "Chapter 4 — Photosynthesis", count =
       });
     }, 250);
 
-    const timers = STREAMED_QUESTIONS.map((_, i) =>
-      setTimeout(() => setVisibleQuestions((v) => [...v, STREAMED_QUESTIONS[i]]), i * 900)
+    const timers = STREAM_LINES.map((_, i) =>
+      setTimeout(() => setVisibleLines((v) => [...v, STREAM_LINES[i]]), i * 900)
     );
 
     return () => { clearInterval(iv); timers.forEach(clearTimeout); };
@@ -62,8 +62,10 @@ const  GenerationProgress = ({ chapter = "Chapter 4 — Photosynthesis", count =
           classId: state?.classId,
           className: state?.className,
           chapter: activeChapter,
+          course: state?.course,
           count: activeCount,
           type: activeType,
+          questions: state?.questions,
         },
       });
     }, 1200);
@@ -82,7 +84,7 @@ const  GenerationProgress = ({ chapter = "Chapter 4 — Photosynthesis", count =
       {/* Header */}
       <div className="flex items-start gap-3 mb-6">
         <div>
-          <p className="text-text font-medium text-base">Generating questions</p>
+          <p className="text-text font-medium text-base">Processing request</p>
           <p className="text-text-muted text-sm mt-0.5">{activeChapter} · {activeCount} {activeType}</p>
         </div>
         <div className="ml-auto flex items-center gap-1.5 bg-[#EDE9FE] text-[#5B21B6] text-xs font-medium px-3 py-1 rounded-full">
@@ -136,17 +138,18 @@ const  GenerationProgress = ({ chapter = "Chapter 4 — Photosynthesis", count =
         })}
       </div>
 
-      {/* Streaming Preview */}
+      {/* Streaming Log */}
       <div className="border-t border-border pt-5">
-        <p className="text-xs font-medium text-text-muted uppercase tracking-wider mb-3">Streaming preview</p>
+        <p className="text-xs font-medium text-text-muted uppercase tracking-wider mb-3">Processing log</p>
         <div className="flex flex-col gap-2">
-          {visibleQuestions.map((q, i) => (
+          {visibleLines.map((line, i) => (
             <div
               key={i}
-              className="bg-surface-alt border border-[#DBEAFE] rounded-xl px-3.5 py-2.5 text-sm text-text leading-relaxed animate-fade-up"
+              className="bg-surface-alt border border-[#DBEAFE] rounded-xl px-3.5 py-2.5 text-sm text-text leading-relaxed animate-fade-up font-mono"
             >
-              {q}
-              {i === visibleQuestions.length - 1 && (
+              <span className="text-text-muted mr-2">›</span>
+              {line}
+              {i === visibleLines.length - 1 && (
                 <span className="inline-block w-0.5 h-3 bg-ai ml-0.5 align-middle animate-[blink_0.7s_step-end_infinite]" />
               )}
             </div>

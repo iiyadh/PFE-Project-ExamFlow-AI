@@ -25,6 +25,9 @@ app.use('/api/student', require('./routes/studentRoutes'));
 app.use('/api/course', require('./routes/coursRoutes'));
 app.use('/api/markdown', require('./routes/markdownRoutes'));
 app.use('/api/progress', require('./routes/progressRoutes'));
+app.use('/api/questions', require('./routes/questionRoutes'));
+app.use('/api/exams', require('./routes/examRoutes'));
+app.use('/api/exam-attempts', require('./routes/examAttemptRoutes'));
 
 
 

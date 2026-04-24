@@ -30,7 +30,6 @@ services:
       - "8000:8000"
     volumes:
       - ./ai-service:/app
-      - ./ai-service/app/chroma_db:/app/chroma_db
     depends_on:
       - server
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
@@ -49,3 +48,5 @@ services:
 
 volumes:
   mongo_data:
+  ai_chroma_data:
+  ollama_data:

@@ -9,9 +9,26 @@ import {
 
 const OPTION_LABELS = ["A", "B", "C", "D", "E", "F"];
 
-export default function MCQOptionsEditor({ options, correctAnswer, onChange, error }) {
+// mode: "single" (radio) | "multiple" (checkbox)
+// correctAnswer: number for single, number[] for multiple
+export default function MCQOptionsEditor({ options, correctAnswer, onChange, error, mode = "single" }) {
   const [dragIndex, setDragIndex] = useState(null);
   const [dragOver, setDragOver] = useState(null);
+
+  const isCorrect = (i) => {
+    if (mode === "multiple") return Array.isArray(correctAnswer) && correctAnswer.includes(i);
+    return i === correctAnswer;
+  };
+
+  const toggleCorrect = (i) => {
+    if (mode === "multiple") {
+      const current = Array.isArray(correctAnswer) ? correctAnswer : [];
+      const next = current.includes(i) ? current.filter((x) => x !== i) : [...current, i];
+      onChange(options, next);
+    } else {
+      onChange(options, i);
+    }
+  };
 
   const updateOption = (i, value) => {
     const next = [...options];
@@ -27,17 +44,18 @@ export default function MCQOptionsEditor({ options, correctAnswer, onChange, err
   const removeOption = (i) => {
     if (options.length <= 2) return;
     const next = options.filter((_, idx) => idx !== i);
-    const newCorrect = correctAnswer === i
-      ? 0
-      : correctAnswer > i
-      ? correctAnswer - 1
-      : correctAnswer;
-    onChange(next, newCorrect);
+    if (mode === "multiple") {
+      const nextCorrect = (Array.isArray(correctAnswer) ? correctAnswer : [])
+        .filter((c) => c !== i)
+        .map((c) => (c > i ? c - 1 : c));
+      onChange(next, nextCorrect);
+    } else {
+      const newCorrect =
+        correctAnswer === i ? 0 : correctAnswer > i ? correctAnswer - 1 : correctAnswer;
+      onChange(next, newCorrect);
+    }
   };
 
-  const setCorrect = (i) => onChange(options, i);
-
-  // Drag and drop reorder
   const handleDragStart = (i) => setDragIndex(i);
   const handleDragEnter = (i) => setDragOver(i);
 
@@ -51,10 +69,20 @@ export default function MCQOptionsEditor({ options, correctAnswer, onChange, err
     const [removed] = next.splice(dragIndex, 1);
     next.splice(i, 0, removed);
 
-    let newCorrect = correctAnswer;
-    if (correctAnswer === dragIndex) newCorrect = i;
-    else if (dragIndex < correctAnswer && i >= correctAnswer) newCorrect = correctAnswer - 1;
-    else if (dragIndex > correctAnswer && i <= correctAnswer) newCorrect = correctAnswer + 1;
+    let newCorrect;
+    if (mode === "multiple") {
+      newCorrect = (Array.isArray(correctAnswer) ? correctAnswer : []).map((c) => {
+        if (c === dragIndex) return i;
+        if (dragIndex < c && i >= c) return c - 1;
+        if (dragIndex > c && i <= c) return c + 1;
+        return c;
+      });
+    } else {
+      newCorrect = correctAnswer;
+      if (correctAnswer === dragIndex) newCorrect = i;
+      else if (dragIndex < correctAnswer && i >= correctAnswer) newCorrect = correctAnswer - 1;
+      else if (dragIndex > correctAnswer && i <= correctAnswer) newCorrect = correctAnswer + 1;
+    }
 
     onChange(next, newCorrect);
     setDragIndex(null);
@@ -68,13 +96,13 @@ export default function MCQOptionsEditor({ options, correctAnswer, onChange, err
           Answer Options
         </label>
         <span className="text-xs text-text-muted">
-          Click radio to set correct answer
+          {mode === "multiple" ? "Click to toggle correct answers" : "Click to set correct answer"}
         </span>
       </div>
 
       <div className="space-y-2">
         {options.map((opt, i) => {
-          const isCorrect = i === correctAnswer;
+          const correct = isCorrect(i);
           const isDragging = dragIndex === i;
           const isDragOver = dragOver === i;
 
@@ -87,48 +115,46 @@ export default function MCQOptionsEditor({ options, correctAnswer, onChange, err
               onDragEnd={() => handleDrop(dragOver ?? i)}
               onDragOver={(e) => e.preventDefault()}
               className={`group flex items-center gap-3 rounded-xl border px-3 py-2.5 transition-all duration-150 ${
-                isCorrect
+                correct
                   ? "border-emerald-300 bg-emerald-50 dark:bg-emerald-900/20 dark:border-emerald-700"
                   : isDragOver
                   ? "border-primary bg-surface-alt"
                   : "border-border bg-surface-alt hover:border-primary/40"
               } ${isDragging ? "opacity-40 scale-[0.98]" : "opacity-100"}`}
             >
-              {/* Drag Handle */}
               <DragOutlined className="cursor-grab text-text-muted opacity-0 group-hover:opacity-100 transition-opacity text-xs shrink-0" />
 
-              {/* Option Label */}
+              {/* Square badge for multiple (checkbox feel), round for single (radio feel) */}
               <span
-                className={`flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-full text-xs font-bold transition-all ${
-                  isCorrect
+                className={`flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center text-xs font-bold transition-all ${
+                  mode === "multiple" ? "rounded-md" : "rounded-full"
+                } ${
+                  correct
                     ? "bg-success text-white shadow-sm"
                     : "bg-border text-text-muted hover:bg-primary/20 hover:text-primary"
                 }`}
-                onClick={() => setCorrect(i)}
-                title="Set as correct answer"
+                onClick={() => toggleCorrect(i)}
+                title={mode === "multiple" ? "Toggle correct answer" : "Set as correct answer"}
               >
-                {isCorrect ? <CheckCircleFilled className="text-[11px]" /> : OPTION_LABELS[i]}
+                {correct ? <CheckCircleFilled className="text-[11px]" /> : OPTION_LABELS[i]}
               </span>
 
-              {/* Text Input */}
               <input
                 type="text"
                 value={opt}
                 onChange={(e) => updateOption(i, e.target.value)}
                 placeholder={`Option ${OPTION_LABELS[i]}…`}
                 className={`flex-1 bg-transparent text-sm outline-none placeholder:text-text-muted ${
-                  isCorrect ? "font-medium text-success" : "text-text"
+                  correct ? "font-medium text-success" : "text-text"
                 }`}
               />
 
-              {/* Correct Badge */}
-              {isCorrect && (
+              {correct && (
                 <span className="shrink-0 rounded-full bg-success/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-success">
                   Correct
                 </span>
               )}
 
-              {/* Remove Button */}
               {options.length > 2 && (
                 <button
                   onClick={() => removeOption(i)}
@@ -143,7 +169,6 @@ export default function MCQOptionsEditor({ options, correctAnswer, onChange, err
         })}
       </div>
 
-      {/* Error */}
       {error && (
         <p className="mt-2 flex items-center gap-1.5 text-xs text-error">
           <InfoCircleOutlined />
@@ -151,7 +176,6 @@ export default function MCQOptionsEditor({ options, correctAnswer, onChange, err
         </p>
       )}
 
-      {/* Add Option Button */}
       {options.length < 6 && (
         <button
           onClick={addOption}
@@ -162,10 +186,11 @@ export default function MCQOptionsEditor({ options, correctAnswer, onChange, err
         </button>
       )}
 
-      {/* Helper Note */}
       <p className="mt-2 flex items-center gap-1.5 text-xs text-text-muted">
         <InfoCircleOutlined className="text-[10px]" />
-        Click the letter badge to mark the correct answer · Drag rows to reorder
+        {mode === "multiple"
+          ? "Click the badge to toggle correct answers · Drag rows to reorder"
+          : "Click the letter badge to mark the correct answer · Drag rows to reorder"}
       </p>
     </div>
   );

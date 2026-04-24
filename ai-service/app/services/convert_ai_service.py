@@ -3,13 +3,13 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from langchain_groq import ChatGroq
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import JsonOutputParser
 
-llm = ChatGroq(
-    api_key=os.getenv("GROQ_API_KEY"),
-    model=os.getenv("GROQ_MODEL", "openai/gpt-oss-120b"),
+llm = ChatGoogleGenerativeAI(
+    google_api_key=os.getenv("GEMINI_API_KEY"),
+    model=os.getenv("GEMINI_MODEL", "gemini-3.1-flash-lite-preview"),
     temperature=0,
 )
 parser = JsonOutputParser()
@@ -100,6 +100,7 @@ def generate_section_content(full_text: str, course_title: str, section: dict, s
             "content": full_text,
             "course_title": course_title,
             "section_title": section.get("title", f"Section {section_index}"),
+            "section_index": section_index,
         })
     except Exception as e:
         print(f"Error generating content for section '{section.get('title', '')}': {e}")

@@ -91,6 +91,21 @@ const NavBar = ({ role, setOpen ,setProfileOpen }) => {
             label: 'My Profile',
             onClick: () => setProfileOpen(true)
         },
+        ...(role === 'STUDENT'
+            ? [{
+                key: 'exams',
+                icon: <BookOpen className="w-4 h-4" />,
+                label: 'My Exams',
+                onClick: () => navigate('/student/exams')
+            },
+            {
+                key: 'classes',
+                icon: <GraduationCap className="w-4 h-4" />,
+                label: 'My Classes',
+                onClick: () => navigate('/student/classes')
+            }
+        ]
+            : []),
         {
             key: 'settings',
             icon: <Settings className="w-4 h-4" />,

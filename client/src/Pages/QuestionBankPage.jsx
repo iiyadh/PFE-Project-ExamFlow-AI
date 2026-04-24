@@ -1,5 +1,6 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Link, useLocation , useParams } from "react-router-dom";
+import api from "../lib/api";
 import QuestionSearchBar from "../Components/QuestionSearchBar";
 import QuestionFiltersSidebar from "../Components/QuestionFiltersSidebar";
 import QuestionResultGrid from "../Components/QuestionResultGrid";
@@ -33,7 +34,6 @@ const INITIAL_QUESTIONS = Array.from({ length: 48 }, (_, i) => ({
   correctAnswer: i % 3 !== 0 ? 0 : null,
   status: ["approved", "pending", "flagged"][i % 3],
   score: Math.floor(70 + (i * 13) % 30),
-  tags: [["calculus", "trigonometry"], ["mechanics", "forces"], ["cell biology"], ["chemistry", "formulas"]][i % 4],
   createdAt: new Date(Date.now() - i * 86400000 * 2).toISOString(),
   source: i % 5 === 0 ? "manual" : "ai",
 }));
@@ -43,7 +43,15 @@ export default function QuestionBankPage() {
   const className = location.state?.className;
 
   // Core data
-  const [questions, setQuestions] = useState(INITIAL_QUESTIONS);
+  const [questions, setQuestions] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    api.get("/questions")
+      .then(({ data }) => setQuestions(data.map((q) => ({ ...q, id: q._id, status: q.status || "approved", course: q.course || "Unknown", chapter: q.chapter || "Unknown", score: null }))))
+      .catch((err) => console.error("Failed to load questions:", err))
+      .finally(() => setLoading(false));
+  }, []);
 
   // UI
   const [search, setSearch] = useState("");
@@ -69,8 +77,7 @@ export default function QuestionBankPage() {
   // ── Filtering ────────────────────────────────────────────────────────────────
   const filtered = questions.filter((q) => {
     const matchSearch = !search
-      || q.text.toLowerCase().includes(search.toLowerCase())
-      || q.tags?.some(t => t.includes(search.toLowerCase()));
+      || q.text.toLowerCase().includes(search.toLowerCase());
     const matchType = !filters.type.length || filters.type.includes(q.type);
     const matchDiff = !filters.difficulty.length || filters.difficulty.includes(q.difficulty);
     const matchStatus = !filters.status.length || filters.status.includes(q.status);
@@ -115,49 +122,36 @@ export default function QuestionBankPage() {
     setShowEditor(true);
   };
 
-  const handleSaveQuestion = (formData) => {
-    const tags = formData.tags
-      ? formData.tags.split(",").map(t => t.trim()).filter(Boolean)
-      : [];
+  const handleSaveQuestion = async (formData) => {
+    const hasOptions = formData.type === "SingleAnswer" || formData.type === "MultipleAnswer";
+    const payload = {
+      text: formData.question,
+      type:
+        formData.type === "SingleAnswer" ? "single_answer" :
+        formData.type === "MultipleAnswer" ? "multiple_answer" : "short_answer",
+      difficulty: (formData.difficulty || "easy").toLowerCase(),
+      options: hasOptions ? formData.options : null,
+      correctAnswer: hasOptions ? formData.correctAnswer : null,
+      source: "manual",
+      chapter: formData.chapter || undefined,
+      course: formData.course || undefined,
+    };
 
-    if (editingQuestion) {
-      setQuestions(prev => prev.map(q =>
-        q.id === editingQuestion.id
-          ? {
-              ...q,
-              text: formData.question,
-              type: formData.type === "MCQ" ? "mcq" : "short_answer",
-              difficulty: formData.difficulty,
-              course: formData.course,
-              chapter: formData.chapter,
-              options: formData.type === "MCQ" ? formData.options : null,
-              correctAnswer: formData.type === "MCQ" ? formData.correctAnswer : null,
-              answer: formData.type !== "MCQ" ? formData.answer : undefined,
-              tags,
-              status: "pending",
-            }
-          : q
-      ));
-      showToast("Question updated successfully");
-    } else {
-      const newQ = {
-        id: `q-${Date.now()}`,
-        text: formData.question,
-        type: formData.type === "MCQ" ? "mcq" : "short_answer",
-        difficulty: formData.difficulty,
-        course: formData.course,
-        chapter: formData.chapter,
-        options: formData.type === "MCQ" ? formData.options : null,
-        correctAnswer: formData.type === "MCQ" ? formData.correctAnswer : null,
-        answer: formData.type !== "MCQ" ? formData.answer : undefined,
-        status: "pending",
-        score: null,
-        tags,
-        createdAt: new Date().toISOString(),
-        source: "manual",
-      };
-      setQuestions(prev => [newQ, ...prev]);
-      showToast("Question added to the bank");
+    try {
+      if (editingQuestion) {
+        const { data } = await api.put(`/questions/${editingQuestion._id || editingQuestion.id}`, payload);
+        setQuestions(prev => prev.map(q =>
+          q.id === editingQuestion.id ? { ...q, ...data, id: data._id } : q
+        ));
+        showToast("Question updated successfully");
+      } else {
+        const { data } = await api.post("/questions", payload);
+        setQuestions(prev => [{ ...data, id: data._id, status: "approved", course: "Unknown", chapter: "Unknown", score: null }, ...prev]);
+        showToast("Question added to the bank");
+      }
+    } catch (err) {
+      console.error("Save failed:", err);
+      showToast("Failed to save question");
     }
 
     setShowEditor(false);
@@ -174,12 +168,18 @@ export default function QuestionBankPage() {
     setDeleteConfirmIds(Array.isArray(idOrIds) ? idOrIds : [idOrIds]);
   };
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     const count = deleteConfirmIds.length;
-    setQuestions(prev => prev.filter(q => !deleteConfirmIds.includes(q.id)));
-    setSelectedIds(prev => prev.filter(id => !deleteConfirmIds.includes(id)));
-    setDeleteConfirmIds([]);
-    showToast(`${count} question${count !== 1 ? "s" : ""} deleted`);
+    try {
+      await Promise.all(deleteConfirmIds.map((id) => api.delete(`/questions/${id}`)));
+      setQuestions(prev => prev.filter(q => !deleteConfirmIds.includes(q.id)));
+      setSelectedIds(prev => prev.filter(id => !deleteConfirmIds.includes(id)));
+      setDeleteConfirmIds([]);
+      showToast(`${count} question${count !== 1 ? "s" : ""} deleted`);
+    } catch (err) {
+      console.error("Delete failed:", err);
+      showToast("Failed to delete question(s)");
+    }
   };
 
   // ── Preview ──────────────────────────────────────────────────────────────────

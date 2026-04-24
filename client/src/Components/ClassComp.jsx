@@ -1,5 +1,5 @@
 import { Avatar, Button, Input ,Dropdown, Tooltip} from 'antd';
-import { FolderOutlined, EllipsisOutlined, PlusOutlined ,EditOutlined  ,DeleteOutlined, UsergroupAddOutlined ,HddOutlined } from '@ant-design/icons';
+import { FolderOutlined, EllipsisOutlined, PlusOutlined ,EditOutlined  ,DeleteOutlined, UsergroupAddOutlined ,HddOutlined, CalendarOutlined } from '@ant-design/icons';
 import { useState, useEffect } from 'react';
 import ClassModal from './ClassModal';
 import DriveFilesModal from "../Components/DriveFilesModal";
@@ -271,6 +271,12 @@ const ClassComp = () => {
                               label: 'Exercices',
                               icon: <HddOutlined  />,
                               onClick: () => { navigate(`/teacher/question-bank/${clas._id}`, { state: { className: clas.title } }) }
+                            },
+                            {
+                              key: '5',
+                              label: 'Exams',
+                              icon: <CalendarOutlined />,
+                              onClick: () => { navigate('/teacher/exams', { state: { classId: clas._id, className: clas.title } }) }
                             },
                             {
                               key: '3',

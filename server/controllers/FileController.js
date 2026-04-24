@@ -37,6 +37,9 @@ const uploadFile = async (req,res) =>{
         fs.unlinkSync(file.path);
 
         const data = response.data;
+        if (data.error || !data.source) {
+            return res.status(500).json({ message: 'AI service failed to process file', error: data.error });
+        }
         const newFile = new File({
             name: req.body.name || file.originalname,
             mimeType: req.body.mimeType || file.mimetype,
@@ -73,22 +76,15 @@ const convertFileToCourse = async (req,res) =>{
         if(!fileData){
             return res.status(404).json({ message: 'File not found' });
         }
-        // const response = await axios.post(`${AI_SERVICE_URL}/convert/`, { source: fileData.public_id });
+        const aiResponse = await axios.post(`${AI_SERVICE_URL}/convert/`, { source: fileData.public_id });
+        const aiData = aiResponse.data;
+        const meta = aiData.course_meta || {};
         const courseData = {
-            title: `Course from ${fileData.name}`,
-            description: `Converted from file ${fileData.name}`,
-            level: 'Beginner',
-            image: backgrounds[Math.floor(Math.random() * backgrounds.length)],
-            markdownContent: [
-                {
-                    title: 'Introduction',
-                    content: `This course was generated from the file ${fileData.name}.`
-                },
-                {
-                    title: 'Content',
-                    content: `The original file had a size of ${fileData.size} and was last modified on ${fileData.modifiedTime}.`
-                }
-            ]
+            title: meta.title || `Course from ${fileData.name}`,
+            description: meta.description || `Converted from file ${fileData.name}`,
+            level: meta.level || 'Beginner',
+            image: meta.image || backgrounds[Math.floor(Math.random() * backgrounds.length)],
+            markdownContent: (aiData.sections || []).map(s => ({ title: s.title, content: s.content })),
         };
         // Save each MarkdownContent document and collect their IDs
         const markdownContentIds = [];

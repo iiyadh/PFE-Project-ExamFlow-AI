@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import {
   StarOutlined,
@@ -14,44 +14,22 @@ import {
   ThunderboltOutlined,
   RightOutlined,
 } from "@ant-design/icons";
+import api from '../lib/api';
 
-const COURSES = [
-  { value: "cs101", label: "CS101 — Introduction to Computer Science" },
-  { value: "math201", label: "MATH201 — Linear Algebra" },
-  { value: "phys110", label: "PHYS110 — Classical Mechanics" },
-  { value: "bio220", label: "BIO220 — Cell Biology" },
-];
-
-const CHAPTERS = {
-  cs101: [
-    { value: "ch1", label: "Chapter 1 — Algorithms & Complexity" },
-    { value: "ch2", label: "Chapter 2 — Data Structures" },
-    { value: "ch3", label: "Chapter 3 — Object-Oriented Programming" },
-    { value: "ch4", label: "Chapter 4 — Databases & SQL" },
-    { value: "ch5", label: "Chapter 5 — Networking Fundamentals" },
-  ],
-  math201: [
-    { value: "ch1", label: "Chapter 1 — Vectors & Matrices" },
-    { value: "ch2", label: "Chapter 2 — Eigenvalues & Eigenvectors" },
-  ],
-  phys110: [
-    { value: "ch1", label: "Chapter 1 — Newton's Laws" },
-    { value: "ch2", label: "Chapter 2 — Energy & Work" },
-  ],
-  bio220: [
-    { value: "ch1", label: "Chapter 1 — Cell Structure" },
-    { value: "ch2", label: "Chapter 2 — Mitosis & Meiosis" },
-  ],
-};
 
 const QUESTION_TYPES = [
   {
-    id: "mcq",
-    label: "Multiple Choice",
+    id: "single_answer",
+    label: "One Answer",
     icon: <CheckCircleOutlined className="text-base" />,
   },
   {
-    id: "short",
+    id: "multiple_answer",
+    label: "Multiple Answers",
+    icon: <AppstoreOutlined className="text-base" />,
+  },
+  {
+    id: "short_answer",
     label: "Short Answer",
     icon: <UnorderedListOutlined className="text-base" />,
   },
@@ -168,8 +146,10 @@ const GenerateQuestions = () => {
   const { state } = useLocation();
   const [genqtab, setGenqtab] = useState("prompt");
   const [customPrompt, setCustomPrompt] = useState("");
-  const [course, setCourse] = useState("cs101");
-  const [chapter, setChapter] = useState("ch2");
+  const [courses, setCourses] = useState([]);
+  const [chaptersMap, setChaptersMap] = useState({});
+  const [course, setCourse] = useState("");
+  const [chapter, setChapter] = useState("");
   const [qType, setQType] = useState("mcq");
   const [count, setCount] = useState(10);
   const [difficulty, setDifficulty] = useState("easy");
@@ -181,8 +161,26 @@ const GenerateQuestions = () => {
   const [advOpen, setAdvOpen] = useState(false);
   const [generating, setGenerating] = useState(false);
 
-  const chapters = CHAPTERS[course] || [];
-  const typeLabels = { mcq: "MCQ", short: "Short Answer", both: "Mixed" };
+  useEffect(() => {
+    if (!classId) return;
+    api.get(`/course/${classId}/with-chapters`).then(({ data }) => {
+      const courseList = data.map((c) => ({ value: c._id, label: c.title }));
+      const chMap = data.reduce((acc, c) => {
+        acc[c._id] = (c.markdownContent || []).map((m) => ({ value: m._id, label: m.title }));
+        return acc;
+      }, {});
+      setCourses(courseList);
+      setChaptersMap(chMap);
+      if (courseList.length > 0) {
+        setCourse(courseList[0].value);
+        const firstChapters = chMap[courseList[0].value] || [];
+        setChapter(firstChapters[0]?.value || "");
+      }
+    }).catch((err) => console.error("Failed to load courses:", err));
+  }, [classId]);
+
+  const chapters = chaptersMap[course] || [];
+  const typeLabels = { single_answer: "One Answer", multiple_answer: "Multiple Answers", short_answer: "Short Answer", both: "Mixed" };
   const diffLabel =
     DIFFICULTIES.find((d) => d.id === difficulty)?.label || "—";
   const estSeconds = Math.round(count * (qType === "both" ? 2 : 1.5));
@@ -190,31 +188,52 @@ const GenerateQuestions = () => {
     estSeconds < 60 ? `~${estSeconds} sec` : `~${Math.ceil(estSeconds / 60)} min`;
 
   const courseName =
-    COURSES.find((c) => c.value === course)?.label?.split(" — ")[0] || "—";
+    courses.find((c) => c.value === course)?.label || "—";
   const chapterName =
     chapters.find((c) => c.value === chapter)?.label?.split(" — ")[0] || "—";
   const className = state?.className;
 
   const handleCourseChange = (nextCourse) => {
     setCourse(nextCourse);
-    const nextChapters = CHAPTERS[nextCourse] || [];
+    const nextChapters = chaptersMap[nextCourse] || [];
     setChapter(nextChapters[0]?.value || "");
   };
 
-  const handleGenerate = () => {
+  const handleGenerate = async () => {
     setGenerating(true);
-    setTimeout(() => {
-      setGenerating(false);
+    try {
+      const chapterLabel = chapters.find((c) => c.value === chapter)?.label || "Selected chapter";
+      const resolvedCourse = courses.find((c) => c.value === course)?.label || className || "General Course";
+      const { data } = await api.post("/questions/generate", {
+        chapter: chapterLabel,
+        course: resolvedCourse,
+        q_type: qType,
+        difficulty,
+        num_questions: count,
+        language,
+        blooms,
+        instructions,
+        prompt: customPrompt,
+        mode: genqtab,
+        autoVerify,
+        avoidDupes,
+      });
       navigate("/teacher/genprogress", {
         state: {
           classId,
           className,
-          chapter: chapters.find((c) => c.value === chapter)?.label || "Selected chapter",
+          chapter: chapterLabel,
+          course: resolvedCourse,
           count,
           type: typeLabels[qType],
+          questions: data.questions,
         },
       });
-    }, 700);
+    } catch (err) {
+      console.error("Generate failed:", err);
+    } finally {
+      setGenerating(false);
+    }
   };
 
   return (
@@ -342,7 +361,7 @@ const GenerateQuestions = () => {
                     onChange={handleCourseChange}
                     placeholder="Select a course…"
                   >
-                    {COURSES.map((c) => (
+                    {courses.map((c) => (
                       <option key={c.value} value={c.value}>
                         {c.label}
                       </option>

@@ -6,13 +6,14 @@ import {
   BookOutlined,
   RobotOutlined,
   InfoCircleOutlined,
-  TagOutlined,
+  CheckSquareOutlined,
 } from "@ant-design/icons";
 import MCQOptionsEditor from "./MCQOptionsEditor";
 
 const QUESTION_TYPES = [
-  { key: "MCQ", label: "Multiple Choice", icon: <BulbOutlined /> },
-  { key: "ShortAnswer", label: "Short Answer", icon: <BookOutlined /> },
+  { key: "SingleAnswer", label: "One Answer", icon: <BulbOutlined />, hint: "Radio — one correct option" },
+  { key: "MultipleAnswer", label: "Multiple Answers", icon: <CheckSquareOutlined />, hint: "Checkbox — several correct" },
+  { key: "ShortAnswer", label: "Short Answer", icon: <BookOutlined />, hint: "Open text response" },
 ];
 
 const DIFFICULTIES = [
@@ -21,27 +22,48 @@ const DIFFICULTIES = [
   { key: "hard", label: "Hard", activeClass: "bg-error text-white border-error" },
 ];
 
+function inferType(question) {
+  if (!question) return "SingleAnswer";
+  if (question.type === "short_answer") return "ShortAnswer";
+  if (question.type === "multiple_answer") return "MultipleAnswer";
+  return "SingleAnswer";
+}
+
+function inferCorrectAnswer(question, type) {
+  if (type === "MultipleAnswer") {
+    return Array.isArray(question?.correctAnswer) ? question.correctAnswer : [];
+  }
+  return question?.correctAnswer ?? 0;
+}
+
 export default function QuestionEditor({ question, onSave, onCancel }) {
-  // Accepts question in MOCK_QUESTIONS format (question.text, question.type = "mcq"/"short_answer")
+  const initialType = inferType(question);
   const [form, setForm] = useState({
     question: question?.text || question?.question || "",
-    type: question ? (question.type === "mcq" ? "MCQ" : "ShortAnswer") : "MCQ",
+    type: initialType,
     difficulty: question?.difficulty || "medium",
     options: question?.options || ["", "", "", ""],
-    correctAnswer: question?.correctAnswer ?? 0,
+    correctAnswer: inferCorrectAnswer(question, initialType),
     answer: question?.answer || "",
+    chapter: question?.chapter || "",
+    course: question?.course || "",
   });
 
   const [errors, setErrors] = useState({});
   const [isSaving, setIsSaving] = useState(false);
   const [charCount, setCharCount] = useState(form.question.length);
 
+  const hasOptions = form.type === "SingleAnswer" || form.type === "MultipleAnswer";
+
   const validate = () => {
     const e = {};
     if (!form.question.trim()) e.question = "Question text is required.";
     else if (form.question.trim().length < 10) e.question = "Question must be at least 10 characters.";
-    if (form.type === "MCQ") {
+    if (hasOptions) {
       if (form.options.some((o) => !o.trim())) e.options = "All answer options must be filled in.";
+      if (form.type === "MultipleAnswer" && (!Array.isArray(form.correctAnswer) || form.correctAnswer.length === 0)) {
+        e.options = "Select at least one correct answer.";
+      }
     } else {
       if (!form.answer.trim()) e.answer = "Model answer is required.";
     }
@@ -50,20 +72,23 @@ export default function QuestionEditor({ question, onSave, onCancel }) {
 
   const handleSave = () => {
     const e = validate();
-    if (Object.keys(e).length > 0) {
-      setErrors(e);
-      return;
-    }
+    if (Object.keys(e).length > 0) { setErrors(e); return; }
     setIsSaving(true);
-    setTimeout(() => {
-      onSave(form);
-      setIsSaving(false);
-    }, 600);
+    setTimeout(() => { onSave(form); setIsSaving(false); }, 600);
   };
 
   const update = (key, value) => {
     setForm((f) => ({ ...f, [key]: value }));
     if (errors[key]) setErrors((e) => ({ ...e, [key]: undefined }));
+  };
+
+  const handleTypeChange = (newType) => {
+    setForm((f) => ({
+      ...f,
+      type: newType,
+      correctAnswer: newType === "MultipleAnswer" ? [] : 0,
+    }));
+    setErrors({});
   };
 
   return (
@@ -95,11 +120,11 @@ export default function QuestionEditor({ question, onSave, onCancel }) {
           <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-text-muted">
             Question Type
           </label>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             {QUESTION_TYPES.map((t) => (
               <button
                 key={t.key}
-                onClick={() => update("type", t.key)}
+                onClick={() => handleTypeChange(t.key)}
                 className={`flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-medium transition-all duration-200 ${
                   form.type === t.key
                     ? "border-primary bg-primary text-white shadow-sm"
@@ -111,6 +136,9 @@ export default function QuestionEditor({ question, onSave, onCancel }) {
               </button>
             ))}
           </div>
+          <p className="mt-1.5 text-xs text-text-muted">
+            {QUESTION_TYPES.find((t) => t.key === form.type)?.hint}
+          </p>
         </div>
 
         {/* Difficulty */}
@@ -135,6 +163,32 @@ export default function QuestionEditor({ question, onSave, onCancel }) {
           </div>
         </div>
 
+        {/* Chapter / Course */}
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-text-muted">
+              Chapter <span className="normal-case font-normal">(optional)</span>
+            </label>
+            <input
+              value={form.chapter}
+              onChange={(e) => update("chapter", e.target.value)}
+              placeholder="e.g. Sorting Algorithms"
+              className="w-full rounded-xl border border-border bg-surface-alt px-4 py-2.5 text-sm text-text outline-none transition-all placeholder:text-text-muted focus:border-primary focus:ring-2 focus:ring-primary/20"
+            />
+          </div>
+          <div>
+            <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-text-muted">
+              Course <span className="normal-case font-normal">(optional)</span>
+            </label>
+            <input
+              value={form.course}
+              onChange={(e) => update("course", e.target.value)}
+              placeholder="e.g. Algorithms"
+              className="w-full rounded-xl border border-border bg-surface-alt px-4 py-2.5 text-sm text-text outline-none transition-all placeholder:text-text-muted focus:border-primary focus:ring-2 focus:ring-primary/20"
+            />
+          </div>
+        </div>
+
         {/* Question Text */}
         <div>
           <div className="mb-2 flex items-center justify-between">
@@ -147,10 +201,7 @@ export default function QuestionEditor({ question, onSave, onCancel }) {
           </div>
           <textarea
             value={form.question}
-            onChange={(e) => {
-              update("question", e.target.value);
-              setCharCount(e.target.value.length);
-            }}
+            onChange={(e) => { update("question", e.target.value); setCharCount(e.target.value.length); }}
             maxLength={400}
             rows={3}
             placeholder="Enter your question here…"
@@ -162,17 +213,17 @@ export default function QuestionEditor({ question, onSave, onCancel }) {
           />
           {errors.question && (
             <p className="mt-1.5 flex items-center gap-1.5 text-xs text-error">
-              <InfoCircleOutlined />
-              {errors.question}
+              <InfoCircleOutlined /> {errors.question}
             </p>
           )}
         </div>
 
-        {/* MCQ Options OR Short Answer */}
-        {form.type === "MCQ" ? (
+        {/* Options (single / multiple) OR Short Answer */}
+        {hasOptions ? (
           <MCQOptionsEditor
             options={form.options}
             correctAnswer={form.correctAnswer}
+            mode={form.type === "MultipleAnswer" ? "multiple" : "single"}
             onChange={(options, correctAnswer) => {
               update("options", options);
               update("correctAnswer", correctAnswer);
@@ -198,8 +249,7 @@ export default function QuestionEditor({ question, onSave, onCancel }) {
             />
             {errors.answer && (
               <p className="mt-1.5 flex items-center gap-1.5 text-xs text-error">
-                <InfoCircleOutlined />
-                {errors.answer}
+                <InfoCircleOutlined /> {errors.answer}
               </p>
             )}
           </div>
